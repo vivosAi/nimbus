@@ -21,7 +21,7 @@ final class PermissionWindow: NSObject, NSWindowDelegate {
             backing: .buffered,
             defer: false
         )
-        window.title = "FocusRing"
+        window.title = "Nimbus"
         window.isReleasedWhenClosed = false
         window.center()
         window.delegate = self
@@ -33,7 +33,7 @@ final class PermissionWindow: NSObject, NSWindowDelegate {
         stack.edgeInsets = NSEdgeInsets(top: 20, left: 20, bottom: 20, right: 20)
         stack.translatesAutoresizingMaskIntoConstraints = false
 
-        let heading = NSTextField(labelWithString: "FocusRing needs Accessibility access")
+        let heading = NSTextField(labelWithString: "Nimbus needs Accessibility access")
         heading.font = .systemFont(ofSize: 15, weight: .semibold)
 
         let body = NSTextField(wrappingLabelWithString: """

@@ -2,28 +2,28 @@
 import PackageDescription
 
 let package = Package(
-    name: "FocusRing",
+    name: "Nimbus",
     platforms: [.macOS(.v13)],
     targets: [
         // Pure, unit-testable logic: coordinate math, palettes, the flare curve,
         // preference storage, and the shared GPU uniform layout.
         .target(
-            name: "FocusRingKit",
-            path: "Sources/FocusRingKit"
+            name: "NimbusKit",
+            path: "Sources/NimbusKit"
         ),
         // AppKit/Metal shell. Not unit-tested; verified by hand per milestone.
         .executableTarget(
-            name: "FocusRing",
-            dependencies: ["FocusRingKit"],
-            path: "Sources/FocusRing",
+            name: "Nimbus",
+            dependencies: ["NimbusKit"],
+            path: "Sources/Nimbus",
             // Compiled at runtime by Metal, copied into the bundle by the
             // Makefile — SPM should leave it alone.
             exclude: ["Render/Shaders.metal"]
         ),
         .testTarget(
-            name: "FocusRingTests",
-            dependencies: ["FocusRingKit"],
-            path: "Tests/FocusRingTests"
+            name: "NimbusTests",
+            dependencies: ["NimbusKit"],
+            path: "Tests/NimbusTests"
         ),
     ]
 )

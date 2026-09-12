@@ -3,7 +3,7 @@ import ApplicationServices
 
 /// The app does nothing without Accessibility permission, so this watches the
 /// grant rather than checking once at launch: tick the checkbox in System
-/// Settings and FocusRing starts working within a second, no restart (§6.1).
+/// Settings and Nimbus starts working within a second, no restart (§6.1).
 final class AXPermission {
 
     /// Fires on the main queue whenever the trust state changes, including the
@@ -20,7 +20,7 @@ final class AXPermission {
         AXIsProcessTrusted()
     }
 
-    /// Ask the system to show its "FocusRing would like to control this computer"
+    /// Ask the system to show its "Nimbus would like to control this computer"
     /// alert. Only call this from an explicit user action — calling it on every
     /// launch trains people to dismiss it.
     static func promptForTrust() {

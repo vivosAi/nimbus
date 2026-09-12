@@ -1,5 +1,5 @@
 import XCTest
-@testable import FocusRingKit
+@testable import NimbusKit
 
 final class AnimatorTests: XCTestCase {
 

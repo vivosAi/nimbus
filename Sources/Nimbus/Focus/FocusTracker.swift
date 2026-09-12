@@ -1,6 +1,6 @@
 import AppKit
 import ApplicationServices
-import FocusRingKit
+import NimbusKit
 
 /// Watches which window has keyboard focus and where it is.
 ///
@@ -19,7 +19,7 @@ final class FocusTracker {
     /// True while the focused window is being dragged or resized.
     var onMotionChanged: ((Bool) -> Void)?
 
-    private let readQueue = DispatchQueue(label: "com.vivasonico.focusring.ax",
+    private let readQueue = DispatchQueue(label: "com.vivasonico.nimbus.ax",
                                           qos: .userInitiated)
 
     // Observed application

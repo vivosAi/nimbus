@@ -1,6 +1,6 @@
 import XCTest
 import CoreGraphics
-@testable import FocusRingKit
+@testable import NimbusKit
 
 /// §6.4 calls coordinate conversion "the single most common source of bugs in
 /// this kind of app", and the cases that break naive implementations — a display

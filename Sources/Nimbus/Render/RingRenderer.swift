@@ -1,5 +1,5 @@
 import MetalKit
-import FocusRingKit
+import NimbusKit
 
 /// Drives the ring shader.
 ///

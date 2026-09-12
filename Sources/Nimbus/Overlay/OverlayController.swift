@@ -1,6 +1,6 @@
 import AppKit
 import MetalKit
-import FocusRingKit
+import NimbusKit
 
 /// Owns the single overlay window and decides when it is on screen and where.
 ///
@@ -273,7 +273,7 @@ final class OverlayController {
     /// Everything needed to tell "the window is not on screen" from "the window
     /// is on screen and its contents are not reaching it". Kept because that
     /// distinction took a long time to establish once; enabled with
-    /// `defaults write com.vivasonico.focusring debugMode -int 1`.
+    /// `defaults write com.vivasonico.nimbus debugMode -int 1`.
     private func logWindowDiagnostics() {
         Log.write("  window visible=\(window.isVisible) frame=\(window.frame) "
                   + "level=\(window.level.rawValue) alpha=\(window.alphaValue) "

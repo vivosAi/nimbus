@@ -1,5 +1,5 @@
 import AppKit
-import FocusRingKit
+import NimbusKit
 
 /// Wires the pieces together and owns their lifetimes. Everything downstream of
 /// focus tracking is driven from here; nothing here knows how a ring is drawn.
@@ -84,7 +84,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard permissionWindow == nil else { return }
         let window = PermissionWindow()
         window.onOpenSettings = {
-            // Prompt first: on a fresh install this adds FocusRing to the
+            // Prompt first: on a fresh install this adds Nimbus to the
             // Accessibility list, so there is something to tick when the
             // settings pane opens.
             AXPermission.promptForTrust()

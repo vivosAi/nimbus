@@ -1,6 +1,6 @@
 import XCTest
 import simd
-@testable import FocusRingKit
+@testable import NimbusKit
 
 final class PaletteTests: XCTestCase {
 

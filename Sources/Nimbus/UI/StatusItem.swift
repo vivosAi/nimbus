@@ -1,6 +1,6 @@
 import AppKit
 import ServiceManagement
-import FocusRingKit
+import NimbusKit
 
 /// The menu bar icon and its menu (§9).
 ///
@@ -31,7 +31,7 @@ final class StatusItem: NSObject, NSMenuDelegate {
 
         if let button = item.button {
             button.image = StatusItemIcon.make()
-            button.image?.accessibilityDescription = "FocusRing"
+            button.image?.accessibilityDescription = "Nimbus"
         }
 
         let menu = NSMenu()
@@ -52,7 +52,7 @@ final class StatusItem: NSObject, NSMenuDelegate {
                                action: #selector(grantPermission))
             menu.addItem(warning)
             menu.addItem(.separator())
-            menu.addItem(item(title: "Quit FocusRing", action: #selector(quit), key: "q"))
+            menu.addItem(item(title: "Quit Nimbus", action: #selector(quit), key: "q"))
             return
         }
 
@@ -112,7 +112,7 @@ final class StatusItem: NSObject, NSMenuDelegate {
         login.state = prefs.openAtLogin ? .on : .off
         menu.addItem(login)
 
-        menu.addItem(item(title: "Quit FocusRing", action: #selector(quit), key: "q"))
+        menu.addItem(item(title: "Quit Nimbus", action: #selector(quit), key: "q"))
     }
 
     // MARK: - Submenus
