@@ -1,0 +1,17 @@
+# Build output
+.build/
+build/
+
+# Code-signing material. build/ already covers the current location, but these
+# must never be committed regardless of where they end up.
+*.p12
+*.pem
+*.key
+*.cer
+*.mobileprovision
+
+# macOS / editor
+.DS_Store
+*.xcodeproj
+*.xcworkspace
+xcuserdata/
