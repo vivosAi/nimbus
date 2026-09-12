@@ -17,6 +17,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// interval is measured in tens of minutes, so a half-minute of slop is
     /// invisible and this costs nothing.
     private var rotationTimer: Timer?
+    private let idleMonitor = IdleMonitor()
     private let rotationCheckInterval: TimeInterval = 30
 
     private var isRunning = false
@@ -41,6 +42,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         permission.start()
 
         observeSystemEvents()
+
+        idleMonitor.threshold = prefs.idleThreshold
+        idleMonitor.onIdleChanged = { [weak self] idle in self?.idleChanged(idle) }
+        idleMonitor.onDisplaySleepChanged = { [weak self] asleep in
+            self?.overlay?.setDisplaysAsleep(asleep)
+            if !asleep { self?.userReturned() }
+        }
+        idleMonitor.start()
+    }
+
+    /// Going idle stops the animation. Coming back gets a full flare: after time
+    /// away you are at your most likely to type into whichever window happens to
+    /// hold focus, which is the failure this app exists to prevent.
+    private func idleChanged(_ idle: Bool) {
+        overlay?.setIdle(idle)
+        if !idle, prefs.flareOnReturn { overlay?.flareNow() }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -124,6 +141,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func settingsChanged() {
+        idleMonitor.threshold = prefs.idleThreshold
         if prefs.enabled {
             startTracking()
             overlay?.applySettings()

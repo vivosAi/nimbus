@@ -32,6 +32,9 @@ final class OverlayController {
     /// The last window a flare was fired for, so repeats are suppressed.
     private var lastFlaredState: FocusState?
 
+    private var isIdle = false
+    private var displaysAreAsleep = false
+
     init(prefs: Preferences) {
         self.prefs = prefs
 
@@ -137,6 +140,53 @@ final class OverlayController {
         renderer?.paletteController = PaletteController(startIndex: index, recent: recent)
     }
 
+    // MARK: - Power
+
+    /// Displays asleep: stop entirely, and order the window out so nothing is
+    /// restored mid-frame when they wake.
+    func setDisplaysAsleep(_ asleep: Bool) {
+        displaysAreAsleep = asleep
+        applyRenderingState()
+    }
+
+    /// The user has been away. What happens is their choice, but the default —
+    /// and the only one that serves the case this app exists for — freezes the
+    /// animation while leaving the ring on screen. A paused MTKView keeps its
+    /// last frame, so this costs nothing and still answers "which window has
+    /// keyboard focus?" for someone who has just walked back and is looking at
+    /// the screen before touching anything.
+    func setIdle(_ idle: Bool) {
+        isIdle = idle
+        applyRenderingState()
+    }
+
+    private func applyRenderingState() {
+        guard let metalView else { return }
+
+        if displaysAreAsleep {
+            metalView.isPaused = true
+            if isVisible { window.orderOut(nil) }
+            return
+        }
+
+        // Coming back from display sleep: restore whatever should be showing.
+        if isVisible, !window.isVisible { window.orderFront(nil) }
+
+        switch prefs.idleBehavior {
+        case .alwaysAnimate:
+            metalView.isPaused = !isVisible
+        case .freeze:
+            // Paused, but the last frame stays on screen. Draw one final frame
+            // first so it freezes on something current rather than on whatever
+            // happened to be mid-turbulence.
+            if isIdle, isVisible { metalView.draw() }
+            metalView.isPaused = isIdle || !isVisible
+        case .fadeOut:
+            metalView.isPaused = isIdle || !isVisible
+            if isVisible { window.alphaValue = isIdle ? 0 : 1 }
+        }
+    }
+
     /// Re-read the settings that live on the view rather than in the uniforms.
     func applySettings() {
         metalView?.preferredFramesPerSecond = prefs.frameRate
@@ -194,11 +244,12 @@ final class OverlayController {
 
         if !isVisible {
             window.orderFront(nil)
-            metalView?.isPaused = false
+            window.alphaValue = 1
+            metalView?.isPaused = displaysAreAsleep
             // Draw one frame synchronously rather than waiting up to a frame
             // interval for the display link, so the ring is there the instant
             // the window appears.
-            metalView?.draw()
+            if !displaysAreAsleep { metalView?.draw() }
             isVisible = true
             Log.write("overlay shown for \(state.bundleID ?? "pid \(state.pid)")")
             if prefs.debugMode > 0 { logWindowDiagnostics() }

@@ -139,6 +139,14 @@ public final class Preferences {
         case alwaysAnimate      // never stop; costs the most power
         case freeze             // stop animating, keep the ring visible (default)
         case fadeOut            // stop animating and hide the ring entirely
+
+        public var title: String {
+            switch self {
+            case .alwaysAnimate: return "Keep animating"
+            case .freeze:        return "Stop animating, stay visible"
+            case .fadeOut:       return "Hide the ring"
+            }
+        }
     }
 
     // MARK: - Accessors

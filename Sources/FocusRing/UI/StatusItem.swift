@@ -81,6 +81,7 @@ final class StatusItem: NSObject, NSMenuDelegate {
         menu.addItem(submenu: flareMenu(), title: "Flare on switch", in: self)
         menu.addItem(submenu: frameRateMenu(), title: "Frame rate", in: self)
         menu.addItem(submenu: rotationMenu(), title: "Change colour every", in: self)
+        menu.addItem(submenu: idleMenu(), title: "When you are away", in: self)
 
         menu.addItem(.separator())
 
@@ -238,6 +239,41 @@ final class StatusItem: NSObject, NSMenuDelegate {
         c <= 0.0031308 ? c * 12.92 : 1.055 * pow(c, 1.0 / 2.4) - 0.055
     }
 
+    /// What happens after a stretch with no input. The default keeps the ring
+    /// on screen with its animation stopped, because the moment you walk back
+    /// and look at the screens to see which one has keyboard focus is precisely
+    /// when a hidden ring would be useless. Displays going to sleep is handled
+    /// separately and always stops rendering — nobody can see it either way.
+    private func idleMenu() -> NSMenu {
+        let menu = NSMenu()
+        for behavior in Preferences.IdleBehavior.allCases {
+            let entry = NSMenuItem(title: behavior.title,
+                                   action: #selector(chooseOption(_:)),
+                                   keyEquivalent: "")
+            entry.target = self
+            entry.state = prefs.idleBehavior == behavior ? .on : .off
+            entry.representedObject = Option(apply: { self.prefs.idleBehavior = behavior })
+            menu.addItem(entry)
+        }
+        menu.addItem(.separator())
+        let after = NSMenuItem(title: "After…", action: nil, keyEquivalent: "")
+        after.submenu = options([("2 minutes", 120.0), ("5 minutes", 300.0),
+                                 ("10 minutes", 600.0), ("30 minutes", 1800.0),
+                                 ("Never", 0.0)],
+                                isChosen: { abs(self.prefs.idleThreshold - $0) < 0.001 },
+                                apply: { self.prefs.idleThreshold = $0 })
+        menu.addItem(after)
+
+        menu.addItem(.separator())
+        let flare = NSMenuItem(title: "Flare when you come back",
+                               action: #selector(toggleFlareOnReturn),
+                               keyEquivalent: "")
+        flare.target = self
+        flare.state = prefs.flareOnReturn ? .on : .off
+        menu.addItem(flare)
+        return menu
+    }
+
     private func exclusionsMenu() -> NSMenu {
         let menu = NSMenu()
         let hint = NSMenuItem(title: "Click an app to start ringing it again",
@@ -310,6 +346,11 @@ final class StatusItem: NSObject, NSMenuDelegate {
 
     @objc private func toggleEnabled() {
         prefs.enabled.toggle()
+        onSettingsChanged?()
+    }
+
+    @objc private func toggleFlareOnReturn() {
+        prefs.flareOnReturn.toggle()
         onSettingsChanged?()
     }
 
