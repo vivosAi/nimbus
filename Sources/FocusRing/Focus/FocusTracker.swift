@@ -30,6 +30,14 @@ final class FocusTracker {
     // Observed window within that application
     private var axWindow: AXUIElement?
 
+    /// Periodic re-sync. Everything else here is notification-driven, and a
+    /// dropped notification leaves the ring sitting on a window that no longer
+    /// has focus with nothing to correct it. Some apps never emit
+    /// focusedWindowChanged at all, and notifications can be missed across a
+    /// Space switch. One cheap AX read every couple of seconds heals all of it.
+    private var resyncTimer: Timer?
+    private let resyncInterval: TimeInterval = 2.0
+
     // Motion mode (§6.5)
     private var motionTimer: Timer?
     private var lastMotionAt: Date?
@@ -64,6 +72,7 @@ final class FocusTracker {
 
         // Don't wait for the first app switch to show something.
         attachToFrontmostApplication()
+        startResyncTimer()
     }
 
     func stop() {
@@ -72,12 +81,41 @@ final class FocusTracker {
 
         NSWorkspace.shared.notificationCenter.removeObserver(self)
         NotificationCenter.default.removeObserver(self)
+        resyncTimer?.invalidate()
+        resyncTimer = nil
         exitMotionMode()
         detachObserver()
         publish(nil)
     }
 
     deinit { stop() }
+
+    private func startResyncTimer() {
+        resyncTimer?.invalidate()
+        let timer = Timer(timeInterval: resyncInterval, repeats: true) { [weak self] _ in
+            self?.resync()
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        resyncTimer = timer
+    }
+
+    /// Reconcile against reality. `publish` de-duplicates, so when nothing has
+    /// drifted this costs one AX read and changes nothing.
+    private func resync() {
+        guard isRunning, !isInMotion else { return }
+
+        // If the frontmost app is not the one we are observing, a workspace
+        // notification was missed; rebuild the observer rather than re-reading
+        // a stale application element.
+        if let front = NSWorkspace.shared.frontmostApplication,
+           front.processIdentifier != observedPID {
+            Log.write("resync: frontmost is \(front.bundleIdentifier ?? "pid \(front.processIdentifier)"), "
+                      + "observing \(observedPID.map(String.init) ?? "nothing") — reattaching")
+            attach(to: front)
+            return
+        }
+        refreshGeometry(reason: nil)
+    }
 
     // MARK: - Workspace events
 

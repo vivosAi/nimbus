@@ -21,6 +21,7 @@ final class StatusItem: NSObject, NSMenuDelegate {
     var onSettingsChanged: (() -> Void)?
     var onGrantPermission: (() -> Void)?
     var onNextColor: (() -> Void)?
+    var onChooseColor: ((Palette) -> Void)?
     var onQuit: (() -> Void)?
 
     init(prefs: Preferences) {
@@ -68,6 +69,8 @@ final class StatusItem: NSObject, NSMenuDelegate {
                         action: #selector(nextColor))
         next.isEnabled = prefs.enabled
         menu.addItem(next)
+
+        menu.addItem(submenu: colorMenu(), title: "Colour", in: self)
 
         menu.addItem(.separator())
 
@@ -152,6 +155,87 @@ final class StatusItem: NSObject, NSMenuDelegate {
         options([("30 fps", 30), ("60 fps", 60)],
                 isChosen: { self.prefs.frameRate == $0 },
                 apply: { self.prefs.frameRate = $0 })
+    }
+
+    /// Pick a palette directly. The checkmark is the one currently showing;
+    /// choosing another cross-fades to it exactly as a timed rotation would,
+    /// so a manual change never looks different from an automatic one.
+    private func colorMenu() -> NSMenu {
+        let menu = NSMenu()
+        for palette in Palette.all {
+            let entry = NSMenuItem(title: palette.name,
+                                   action: #selector(chooseColor(_:)),
+                                   keyEquivalent: "")
+            entry.target = self
+            entry.state = palette.name == currentPaletteName ? .on : .off
+            entry.representedObject = palette.name
+            // A swatch, so the list can be read by colour rather than by name.
+            entry.image = StatusItem.swatch(for: palette)
+            menu.addItem(entry)
+        }
+
+        menu.addItem(.separator())
+        let rotation = NSMenuItem(title: "In rotation…", action: nil, keyEquivalent: "")
+        rotation.submenu = rotationMembershipMenu()
+        menu.addItem(rotation)
+        return menu
+    }
+
+    /// Which palettes the timer is allowed to choose from (§8.5). Separate from
+    /// picking one now, because wanting to see a colour is not the same as
+    /// wanting it to keep coming back.
+    private func rotationMembershipMenu() -> NSMenu {
+        let menu = NSMenu()
+        let hint = NSMenuItem(title: "Colours the timer may choose from",
+                              action: nil, keyEquivalent: "")
+        hint.isEnabled = false
+        menu.addItem(hint)
+        menu.addItem(.separator())
+
+        let disabled = prefs.disabledPalettes
+        for palette in Palette.all {
+            let entry = NSMenuItem(title: palette.name,
+                                   action: #selector(toggleColorInRotation(_:)),
+                                   keyEquivalent: "")
+            entry.target = self
+            entry.state = disabled.contains(palette.name) ? .off : .on
+            entry.representedObject = palette.name
+            // Never let the user disable the last one; rotation needs somewhere
+            // to go and an empty list would silently freeze the colour.
+            entry.isEnabled = disabled.contains(palette.name)
+                || disabled.count < Palette.all.count - 1
+            menu.addItem(entry)
+        }
+        return menu
+    }
+
+    /// A filled circle in the palette's own colours, converted back from the
+    /// stored linear RGB for display.
+    private static func swatch(for palette: Palette) -> NSImage {
+        let size = NSSize(width: 12, height: 12)
+        let image = NSImage(size: size)
+        image.lockFocus()
+        let color = NSColor(srgbRed: CGFloat(linearToSRGB(palette.colorA.x)),
+                            green: CGFloat(linearToSRGB(palette.colorA.y)),
+                            blue: CGFloat(linearToSRGB(palette.colorA.z)),
+                            alpha: 1)
+        let edge = NSColor(srgbRed: CGFloat(linearToSRGB(palette.colorB.x)),
+                           green: CGFloat(linearToSRGB(palette.colorB.y)),
+                           blue: CGFloat(linearToSRGB(palette.colorB.z)),
+                           alpha: 1)
+        let rect = NSRect(origin: .zero, size: size).insetBy(dx: 1, dy: 1)
+        color.setFill()
+        NSBezierPath(ovalIn: rect).fill()
+        edge.setStroke()
+        let ring = NSBezierPath(ovalIn: rect.insetBy(dx: 0.75, dy: 0.75))
+        ring.lineWidth = 1.5
+        ring.stroke()
+        image.unlockFocus()
+        return image
+    }
+
+    private static func linearToSRGB(_ c: Float) -> Float {
+        c <= 0.0031308 ? c * 12.92 : 1.055 * pow(c, 1.0 / 2.4) - 0.055
     }
 
     private func exclusionsMenu() -> NSMenu {
@@ -265,6 +349,20 @@ final class StatusItem: NSObject, NSMenuDelegate {
     @objc private func removeExclusion(_ sender: NSMenuItem) {
         guard let bundleID = sender.representedObject as? String else { return }
         prefs.exclusions.remove(bundleID)
+        onSettingsChanged?()
+    }
+
+    @objc private func chooseColor(_ sender: NSMenuItem) {
+        guard let name = sender.representedObject as? String,
+              let palette = Palette.all.first(where: { $0.name == name }) else { return }
+        onChooseColor?(palette)
+    }
+
+    @objc private func toggleColorInRotation(_ sender: NSMenuItem) {
+        guard let name = sender.representedObject as? String else { return }
+        var disabled = prefs.disabledPalettes
+        if disabled.contains(name) { disabled.remove(name) } else { disabled.insert(name) }
+        prefs.disabledPalettes = disabled
         onSettingsChanged?()
     }
 

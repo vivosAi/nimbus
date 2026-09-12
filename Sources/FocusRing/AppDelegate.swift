@@ -32,6 +32,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem.onSettingsChanged = { [weak self] in self?.settingsChanged() }
         statusItem.onGrantPermission = { [weak self] in self?.requestPermission() }
         statusItem.onNextColor = { [weak self] in self?.rotatePalette(reason: "user") }
+        statusItem.onChooseColor = { [weak self] palette in self?.choosePalette(palette) }
         statusItem.onQuit = { NSApp.terminate(nil) }
 
         permission.onChange = { [weak self] trusted in
@@ -184,6 +185,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         persistPaletteState()
         statusItem.currentPaletteName = next.name
         Log.write("palette -> \(next.name) (\(reason))")
+    }
+
+    private func choosePalette(_ palette: Palette) {
+        guard let overlay else { return }
+        overlay.transitionPalette(to: palette)
+        persistPaletteState()
+        statusItem.currentPaletteName = palette.name
+        // A manual pick restarts the rotation clock, so the timer does not
+        // change it out from under the user moments after they chose it.
+        Log.write("palette -> \(palette.name) (chosen)")
     }
 
     /// Persisted so a restart resumes the cycle rather than resetting it (§8.5).
