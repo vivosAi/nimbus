@@ -8,7 +8,7 @@ enum Log {
 
     static let fileURL = URL(fileURLWithPath: "/tmp/nimbus.log")
 
-    private static let queue = DispatchQueue(label: "com.vivasonico.nimbus.log")
+    private static let queue = DispatchQueue(label: "io.github.vivosai.nimbus.log")
     private static let formatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "HH:mm:ss.SSS"

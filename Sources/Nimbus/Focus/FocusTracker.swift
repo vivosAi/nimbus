@@ -19,7 +19,7 @@ final class FocusTracker {
     /// True while the focused window is being dragged or resized.
     var onMotionChanged: ((Bool) -> Void)?
 
-    private let readQueue = DispatchQueue(label: "com.vivasonico.nimbus.ax",
+    private let readQueue = DispatchQueue(label: "io.github.vivosai.nimbus.ax",
                                           qos: .userInitiated)
 
     // Observed application

@@ -10,8 +10,10 @@
 	<string>Nimbus</string>
 	<!-- TCC keys the Accessibility grant to this identifier. Never change it
 	     casually; a change means re-granting permission. -->
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.vivasonico.nimbus</string>
+	<string>io.github.vivosai.nimbus</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>

@@ -1,11 +1,11 @@
 import Foundation
 import CoreGraphics
 
-/// Typed accessors over `UserDefaults`, suite `com.vivasonico.nimbus`.
+/// Typed accessors over `UserDefaults`, suite `io.github.vivosai.nimbus`.
 /// Every setting the menu (§9) exposes lives here with its default.
 public final class Preferences {
 
-    public static let suiteName = "com.vivasonico.nimbus"
+    public static let suiteName = "io.github.vivosai.nimbus"
     public static let shared = Preferences()
 
     private let defaults: UserDefaults
@@ -258,7 +258,7 @@ public final class Preferences {
     }
 
     /// Renderer diagnostic; see `Uniforms.debugMode`. Set with
-    /// `defaults write com.vivasonico.nimbus debugMode -int 2`.
+    /// `defaults write io.github.vivosai.nimbus debugMode -int 2`.
     public var debugMode: Int {
         get { defaults.integer(forKey: Key.debugMode) }
         set { defaults.set(newValue, forKey: Key.debugMode) }

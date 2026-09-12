@@ -6,7 +6,7 @@
 # When this ships publicly, swap SIGN_IDENTITY for a Developer ID and add a
 # notarize target — nothing else here changes.
 
-BUNDLE_ID     := com.vivasonico.nimbus
+BUNDLE_ID     := io.github.vivosai.nimbus
 APP           := build/Nimbus.app
 # A self-signed local identity, used only so the Accessibility grant survives
 # rebuilds — macOS keys that permission to the code signature, and ad-hoc
@@ -15,7 +15,7 @@ APP           := build/Nimbus.app
 SIGN_IDENTITY ?= FocusRing Dev
 ARCHS         := --arch arm64 --arch x86_64
 
-.PHONY: all build release test bundle dev run dev-run stop clean reset-permission cert-info
+.PHONY: all build release test bundle dev run dev-run stop clean reset-permission cert-info icon dmg notarize
 
 all: bundle
 
@@ -35,6 +35,7 @@ bundle: release
 	rm -rf $(APP)
 	mkdir -p $(APP)/Contents/MacOS $(APP)/Contents/Resources
 	cp Resources/Info.plist $(APP)/Contents/
+	cp Resources/AppIcon.icns $(APP)/Contents/Resources/
 	cp .build/apple/Products/Release/Nimbus $(APP)/Contents/MacOS/Nimbus
 	@# Shaders are compiled at runtime from source (no Xcode Metal toolchain
 	@# needed), so the .metal file ships as a plain resource.
@@ -66,6 +67,7 @@ dev: stop build
 	rm -rf $(APP)
 	mkdir -p $(APP)/Contents/MacOS $(APP)/Contents/Resources
 	cp Resources/Info.plist $(APP)/Contents/
+	cp Resources/AppIcon.icns $(APP)/Contents/Resources/
 	cp .build/debug/Nimbus $(APP)/Contents/MacOS/Nimbus
 	@if [ -f Sources/Nimbus/Render/Shaders.metal ]; then \
 		cp Sources/Nimbus/Render/Shaders.metal $(APP)/Contents/Resources/; \
@@ -89,6 +91,51 @@ stop:
 reset-permission: stop
 	tccutil reset Accessibility $(BUNDLE_ID)
 	@echo "Accessibility reset. Re-tick Nimbus in System Settings > Privacy & Security > Accessibility."
+
+## Regenerate the icon from Tools/make-icon.swift. Committed as a .icns so a
+## normal build needs no extra tools, but reproducible from source.
+icon:
+	swift Tools/make-icon.swift build/AppIcon.iconset
+	iconutil -c icns build/AppIcon.iconset -o Resources/AppIcon.icns
+
+# ---------------------------------------------------------------------------
+# Distribution. Needs a Developer ID from an Apple Developer account:
+#
+#   make bundle SIGN_IDENTITY="Developer ID Application: NAME (TEAMID)"
+#   make notarize NOTARY_PROFILE=nimbus
+#   make dmg
+#
+# Store notarisation credentials once, beforehand:
+#   xcrun notarytool store-credentials nimbus --apple-id ... --team-id ... --password ...
+# ---------------------------------------------------------------------------
+
+NOTARY_PROFILE ?= nimbus
+DMG            := build/Nimbus.dmg
+
+## Submit to Apple and staple the ticket into the app. Stapling matters: it lets
+## the app open on a Mac with no network connection.
+notarize:
+	@test -d $(APP) || { echo "No $(APP). Run 'make bundle' first."; exit 1; }
+	@codesign -dvvv $(APP) 2>&1 | grep -q "Developer ID Application" || \
+		{ echo "ERROR: $(APP) is not signed with a Developer ID."; \
+		  echo "       Notarisation will be rejected. Rebuild with:"; \
+		  echo "       make bundle SIGN_IDENTITY=\"Developer ID Application: NAME (TEAMID)\""; \
+		  exit 1; }
+	ditto -c -k --keepParent $(APP) build/Nimbus-notarize.zip
+	xcrun notarytool submit build/Nimbus-notarize.zip \
+		--keychain-profile $(NOTARY_PROFILE) --wait
+	xcrun stapler staple $(APP)
+	xcrun stapler validate $(APP)
+
+## A drag-to-Applications disk image.
+dmg: 
+	@test -d $(APP) || { echo "No $(APP). Run 'make bundle' first."; exit 1; }
+	rm -rf build/dmg $(DMG)
+	mkdir -p build/dmg
+	cp -R $(APP) build/dmg/
+	ln -s /Applications build/dmg/Applications
+	hdiutil create -volname Nimbus -srcfolder build/dmg -ov -format UDZO $(DMG)
+	@shasum -a 256 $(DMG)
 
 cert-info:
 	@security find-identity -v -p codesigning
