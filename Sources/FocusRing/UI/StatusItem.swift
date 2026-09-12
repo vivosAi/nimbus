@@ -30,11 +30,8 @@ final class StatusItem: NSObject, NSMenuDelegate {
         super.init()
 
         if let button = item.button {
-            // A template image so it tracks light and dark menu bars.
-            let image = NSImage(systemSymbolName: "circle.dashed",
-                                accessibilityDescription: "FocusRing")
-            image?.isTemplate = true
-            button.image = image
+            button.image = StatusItemIcon.make()
+            button.image?.accessibilityDescription = "FocusRing"
         }
 
         let menu = NSMenu()
