@@ -152,8 +152,13 @@ final class StatusItem: NSObject, NSMenuDelegate {
                 apply: { self.prefs.flareDuration = $0 })
     }
 
+    /// Frames are the entire cost of running the ring — roughly 0.1% of a CPU
+    /// core per frame-per-second, essentially regardless of what the shader
+    /// does. These are the peak rate, used while a flare is moving quickly; the
+    /// ring halves it once it settles into its slow drift, where the difference
+    /// cannot be seen.
     private func frameRateMenu() -> NSMenu {
-        options([("30 fps", 30), ("60 fps", 60)],
+        options([("Battery saver (15)", 15), ("Normal (30)", 30), ("Smooth (60)", 60)],
                 isChosen: { self.prefs.frameRate == $0 },
                 apply: { self.prefs.frameRate = $0 })
     }

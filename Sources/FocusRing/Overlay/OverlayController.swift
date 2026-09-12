@@ -189,7 +189,7 @@ final class OverlayController {
 
     /// Re-read the settings that live on the view rather than in the uniforms.
     func applySettings() {
-        metalView?.preferredFramesPerSecond = prefs.frameRate
+        renderer?.peakFrameRate = prefs.frameRate
         borderView?.isHidden = renderer != nil && prefs.debugMode == 0
     }
 
@@ -230,6 +230,7 @@ final class OverlayController {
         if let renderer {
             renderer.debugMode = prefs.debugMode
             renderer.flowSpeed = prefs.motionSpeed.flowSpeed
+            renderer.peakFrameRate = prefs.frameRate
             renderer.noiseScale = prefs.turbulence.noiseScale
             renderer.animator.idleIntensity = Float(prefs.idleIntensity)
             renderer.animator.flareDuration = Float(prefs.flareDuration)

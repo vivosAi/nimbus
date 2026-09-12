@@ -10,8 +10,8 @@ struct Uniforms {
     float4 colorA;        // 32  linear RGB in .xyz
     float4 colorB;        // 48
     float4 colorGlow;     // 64
-    float4 params0;       // 80  cornerRadius, bandInner, bandOuter, time
-    float4 params1;       // 96  intensity, flowSpeed, noiseScale, glowFalloff
+    float4 params0;       // 80  cornerRadius, bandInner, bandOuter, flowPhase
+    float4 params1;       // 96  intensity, warpPhase, noiseScale, glowFalloff
 };                        // 112
 
 struct VertexOut {
@@ -164,9 +164,14 @@ fragment float4 ring_fragment(VertexOut in [[stage_in]],
     const float cornerRadius = u.params0.x;
     const float bandInner    = u.params0.y;
     const float bandOuter    = u.params0.z;
-    const float t            = u.params0.w;
+    // Phases, not times. The host integrates speed over elapsed time and sends
+    // the accumulated angle, because multiplying an absolute timestamp by a
+    // *changing* speed makes the phase leap by hundreds of radians the moment
+    // the speed changes — which is what a flare does. Integrating keeps the
+    // motion continuous through every speed change.
+    const float flowPhase    = u.params0.w;
     const float intensity    = u.params1.x;
-    const float flowSpeed    = u.params1.y;
+    const float warpPhase    = u.params1.y;
     const float noiseScale   = u.params1.z;
     const float glowFalloff  = u.params1.w;
 
@@ -200,17 +205,17 @@ fragment float4 ring_fragment(VertexOut in [[stage_in]],
     // folding structure instead of a rigid pattern sliding past. Drifting the
     // warp on its own clock also means the ring keeps changing everywhere at
     // once, not only where the rotation currently is.
-    const float2 q = ring * noiseScale + float2(0.0, t * 0.18);
+    const float2 q = ring * noiseScale + float2(0.0, warpPhase);
     const float2 warp = float2(fbm(q, 2), fbm(q + float2(5.2, 1.3), 2));
 
     // Large, slow tongues travelling one way...
     const float tongues = fbm(ring * noiseScale * 1.5
                               + warp * 1.15
-                              + float2(t * flowSpeed, -t * flowSpeed * 0.55), 3);
+                              + float2(flowPhase, -flowPhase * 0.55), 3);
     // ...and finer, faster detail travelling the other, so the eye never
     // resolves it into a single repeating loop.
     const float detail = fbm(ring * noiseScale * 3.5
-                             - float2(t * flowSpeed * 1.6, t * 0.30), 2);
+                             - float2(flowPhase * 1.6, warpPhase * 1.65), 2);
 
     float n = saturate(0.68 * tongues + 0.42 * detail);
     // Widen the dynamic range. Without this the whole ring sits in a narrow

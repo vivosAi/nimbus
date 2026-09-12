@@ -17,8 +17,8 @@ public struct Uniforms {
     public var colorA: SIMD4<Float>       // offset 32 — linear RGB in .xyz
     public var colorB: SIMD4<Float>       // offset 48
     public var colorGlow: SIMD4<Float>    // offset 64
-    public var params0: SIMD4<Float>      // offset 80 — cornerRadius, bandInner, bandOuter, time
-    public var params1: SIMD4<Float>      // offset 96 — intensity, flowSpeed, noiseScale, glowFalloff
+    public var params0: SIMD4<Float>      // offset 80 — cornerRadius, bandInner, bandOuter, flowPhase
+    public var params1: SIMD4<Float>      // offset 96 — intensity, warpPhase, noiseScale, glowFalloff
 
     /// Checked against `MemoryLayout<Uniforms>.stride` at renderer startup.
     public static let expectedStride = 112
@@ -53,15 +53,18 @@ public struct Uniforms {
     public var bandOuter: Float {
         get { params0.z } set { params0.z = newValue }
     }
-    public var time: Float {
+    /// Accumulated angle the noise has travelled around the ring, in radians.
+    /// A phase rather than a timestamp: speed changes (the flare) must not move
+    /// the pattern, only change how fast it advances from here.
+    public var flowPhase: Float {
         get { params0.w } set { params0.w = newValue }
     }
     /// 0…1, from the animator.
     public var intensity: Float {
         get { params1.x } set { params1.x = newValue }
     }
-    /// Radians per second that the noise travels around the ring.
-    public var flowSpeed: Float {
+    /// The turbulence's own accumulated phase, on a slower clock than the flow.
+    public var warpPhase: Float {
         get { params1.y } set { params1.y = newValue }
     }
     public var noiseScale: Float {

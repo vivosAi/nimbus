@@ -14,7 +14,11 @@ final class RingRenderer: NSObject, MTKViewDelegate {
     private let pipeline: MTLRenderPipelineState
 
     private var uniforms = Uniforms()
-    private let startTime = CACurrentMediaTime()
+
+    /// Accumulated phases. See `Uniforms.flowPhase`.
+    private var flowPhase: Double = 0
+    private var warpPhase: Double = 0
+    private var lastFrameAt: CFTimeInterval?
 
     /// The tracked window's rect in the view's own point coordinates.
     var windowRect: CGRect = .zero
@@ -26,6 +30,10 @@ final class RingRenderer: NSObject, MTKViewDelegate {
     /// Baselines, before the flare's transient multipliers are applied.
     var flowSpeed: Float = 0.45
     var noiseScale: Float = 4.0
+
+    /// Rate while a flare is running, and the settled rate it drops back to.
+    var peakFrameRate: Int = 30
+    var restingFrameRate: Int { max(10, peakFrameRate / 2) }
 
     /// Evaluated every frame. Brightness, band width and speed all come off the
     /// same decay curve so the ring relaxes as one thing.
@@ -149,12 +157,36 @@ final class RingRenderer: NSObject, MTKViewDelegate {
         uniforms.glowFalloff = max(Float(bandOuterPoints) * scale * 0.6, 1.0)
 
         uniforms.debugMode = Float(debugMode)
-        uniforms.time = Float(now - startTime)
+        // Integrate. dt is clamped because the view is paused while the ring is
+        // hidden, idle or the displays are asleep; without the clamp the first
+        // frame back would advance the pattern by however long that lasted and
+        // the ring would visibly jump.
+        let dt = min(now - (lastFrameAt ?? now), 0.1)
+        lastFrameAt = now
+        let speed = Double(flowSpeed * animator.speedScale(at: now))
+        flowPhase += dt * speed
+        warpPhase += dt * speed * 0.4
+
+        uniforms.flowPhase = Float(flowPhase)
+        uniforms.warpPhase = Float(warpPhase)
         uniforms.intensity = animator.intensity(at: now)
+
+        // Frames are the whole cost: measured at roughly 0.1% of a core per
+        // frame-per-second on this hardware, essentially independent of what the
+        // shader does. So run at the full rate only while a flare is actually
+        // moving quickly, and halve it once the ring settles into its slow
+        // drift, where the difference is not visible.
+        // Assigning this reconfigures the view's display link, so only touch it
+        // on an actual transition. Writing it every frame costs more than the
+        // frames it saves.
+        let wanted = animator.isFlaring(at: now) ? peakFrameRate : restingFrameRate
+        if view.preferredFramesPerSecond != wanted {
+            view.preferredFramesPerSecond = wanted
+            Log.write("frame rate -> \(wanted)")
+        }
         // Slow enough that the movement reads as drifting rather than
         // flickering — §8.3's photosensitivity constraint. The structure comes
         // from the turbulence, not from speed.
-        uniforms.flowSpeed = flowSpeed * animator.speedScale(at: now)
         // Features per turn around the ring. At 2.5 there were only two or
         // three, which read as a single bright dot orbiting the window.
         uniforms.noiseScale = noiseScale

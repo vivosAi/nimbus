@@ -30,6 +30,12 @@ final class FocusTracker {
     // Observed window within that application
     private var axWindow: AXUIElement?
 
+    /// Cached per attached process. `NSRunningApplication.bundleIdentifier`
+    /// goes through LaunchServices, which showed up in profiles because the
+    /// re-sync timer was paying for it on every tick. A pid's bundle ID cannot
+    /// change while the process lives.
+    private var cachedBundleID: String?
+
     /// Periodic re-sync. Everything else here is notification-driven, and a
     /// dropped notification leaves the ring sitting on a window that no longer
     /// has focus with nothing to correct it. Some apps never emit
@@ -171,6 +177,7 @@ final class FocusTracker {
         let axApp = AX.makeApplication(pid)
         self.observedPID = pid
         self.axApp = axApp
+        self.cachedBundleID = app.bundleIdentifier
 
         // Read and publish geometry *before* building the observer. Creating an
         // AXObserver and registering six notifications is the slow part of an
@@ -216,6 +223,7 @@ final class FocusTracker {
         observedPID = nil
         axApp = nil
         axWindow = nil
+        cachedBundleID = nil
     }
 
     // Bridged once, as stored constants: these are CFString globals, and using
@@ -329,7 +337,7 @@ final class FocusTracker {
     /// log is not flooded.
     private func refreshGeometry(reason: String?) {
         guard isRunning, let axApp, let pid = observedPID else { return }
-        let bundleID = NSRunningApplication(processIdentifier: pid)?.bundleIdentifier
+        let bundleID = cachedBundleID
 
         readQueue.async { [weak self] in
             guard let self else { return }

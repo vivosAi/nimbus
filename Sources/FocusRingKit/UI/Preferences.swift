@@ -56,7 +56,10 @@ public final class Preferences {
             Key.exclusions: [String](),
             Key.hideInFullScreen: true,
             Key.idleBehavior: IdleBehavior.freeze.rawValue,
-            Key.idleThreshold: 600.0,             // 10 minutes
+            // 0 = never go idle. The ring is wanted at all times; display
+            // sleep is handled separately and does stop rendering, since
+            // nobody can see a sleeping screen.
+            Key.idleThreshold: 0.0,
             Key.flareOnReturn: true,
             // Wide enough that the bloom fades out before the overlay's edge
             // rather than being clipped into a visible rectangle, with room for

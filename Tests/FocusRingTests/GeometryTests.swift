@@ -130,8 +130,8 @@ final class UniformsLayoutTests: XCTestCase {
 
     func testPackedAccessorsWriteThroughToTheRightLanes() {
         var u = Uniforms()
-        u.cornerRadius = 11; u.bandInner = 6; u.bandOuter = 18; u.time = 1.5
-        u.intensity = 0.3; u.flowSpeed = 0.5; u.noiseScale = 2.5; u.glowFalloff = 12
+        u.cornerRadius = 11; u.bandInner = 6; u.bandOuter = 18; u.flowPhase = 1.5
+        u.intensity = 0.3; u.warpPhase = 0.5; u.noiseScale = 2.5; u.glowFalloff = 12
         XCTAssertEqual(u.params0, SIMD4<Float>(11, 6, 18, 1.5))
         XCTAssertEqual(u.params1, SIMD4<Float>(0.3, 0.5, 2.5, 12))
     }
