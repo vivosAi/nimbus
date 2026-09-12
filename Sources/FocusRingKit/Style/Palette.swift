@@ -1,24 +1,36 @@
 import simd
 
-/// A ring colour scheme. Stored as sRGB hex for legibility, converted to linear
-/// RGB before it reaches the shader — mixing and cross-fading colours in gamma
-/// space produces muddy mid-tones, which on a two-colour ring is very visible.
+/// A ring colour scheme.
+///
+/// Authored as sRGB hex for legibility but stored as **linear RGB**, because
+/// every operation done to these values — mixing the two band colours, and
+/// cross-fading one palette into the next — is an interpolation, and
+/// interpolating in gamma space produces muddy, desaturated mid-tones. On a
+/// two-colour ring that is very visible.
 public struct Palette: Equatable {
     public let name: String
-    public let hexA: UInt32
-    public let hexB: UInt32
-    public let hexGlow: UInt32
+    public let colorA: SIMD3<Float>
+    public let colorB: SIMD3<Float>
+    public let colorGlow: SIMD3<Float>
 
+    /// Authoring initialiser, taking sRGB hex.
     public init(name: String, a: UInt32, b: UInt32, glow: UInt32) {
         self.name = name
-        self.hexA = a
-        self.hexB = b
-        self.hexGlow = glow
+        self.colorA = Palette.linear(from: a)
+        self.colorB = Palette.linear(from: b)
+        self.colorGlow = Palette.linear(from: glow)
     }
 
-    public var colorA: SIMD3<Float> { Palette.linear(from: hexA) }
-    public var colorB: SIMD3<Float> { Palette.linear(from: hexB) }
-    public var colorGlow: SIMD3<Float> { Palette.linear(from: hexGlow) }
+    /// Used for intermediate blends, which have no meaningful hex form.
+    public init(name: String,
+                colorA: SIMD3<Float>,
+                colorB: SIMD3<Float>,
+                colorGlow: SIMD3<Float>) {
+        self.name = name
+        self.colorA = colorA
+        self.colorB = colorB
+        self.colorGlow = colorGlow
+    }
 
     /// All high-chroma and bright: the ring has to win against arbitrary window
     /// content, including a white document and a dark terminal.

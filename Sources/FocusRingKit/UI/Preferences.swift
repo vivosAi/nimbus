@@ -35,6 +35,9 @@ public final class Preferences {
         static let margin           = "margin"
         static let hideWhileDragging = "hideWhileDragging"
         static let debugMode        = "debugMode"
+        static let motionSpeed      = "motionSpeed"
+        static let turbulence       = "turbulence"
+        static let openAtLogin      = "openAtLogin"
     }
 
     /// Registered rather than scattered through the accessors, so the whole
@@ -56,9 +59,12 @@ public final class Preferences {
             Key.idleThreshold: 600.0,             // 10 minutes
             Key.flareOnReturn: true,
             // Wide enough that the bloom fades out before the overlay's edge
-            // rather than being clipped into a visible rectangle.
-            Key.margin: 40.0,
+            // rather than being clipped into a visible rectangle, with room for
+            // the band swelling 1.6x at the peak of a flare.
+            Key.margin: 48.0,
             Key.hideWhileDragging: true,
+            Key.motionSpeed: MotionSpeed.normal.rawValue,
+            Key.turbulence: Turbulence.normal.rawValue,
         ])
     }
 
@@ -73,6 +79,51 @@ public final class Preferences {
             case .thin:   return (4, 12)
             case .normal: return (6, 18)
             case .thick:  return (9, 28)
+            }
+        }
+    }
+
+    /// How fast the light travels around the ring. Kept well under any rate
+    /// that could read as flicker — §8.3's photosensitivity constraint is a
+    /// hard floor, not a preference.
+    public enum MotionSpeed: String, CaseIterable {
+        case calm, normal, lively
+
+        public var flowSpeed: Float {
+            switch self {
+            case .calm:   return 0.22
+            case .normal: return 0.45
+            case .lively: return 0.85
+            }
+        }
+
+        public var title: String {
+            switch self {
+            case .calm:   return "Calm"
+            case .normal: return "Normal"
+            case .lively: return "Lively"
+            }
+        }
+    }
+
+    /// How many distinct features there are around the ring. Low values give
+    /// broad slow swells; high values give fine churn.
+    public enum Turbulence: String, CaseIterable {
+        case smooth, normal, churny
+
+        public var noiseScale: Float {
+            switch self {
+            case .smooth: return 2.5
+            case .normal: return 4.0
+            case .churny: return 6.5
+            }
+        }
+
+        public var title: String {
+            switch self {
+            case .smooth: return "Smooth"
+            case .normal: return "Normal"
+            case .churny: return "Churny"
             }
         }
     }
@@ -108,6 +159,23 @@ public final class Preferences {
     public var flareDuration: Double {
         get { defaults.double(forKey: Key.flareDuration) }
         set { defaults.set(newValue, forKey: Key.flareDuration) }
+    }
+
+    public var motionSpeed: MotionSpeed {
+        get { MotionSpeed(rawValue: defaults.string(forKey: Key.motionSpeed) ?? "") ?? .normal }
+        set { defaults.set(newValue.rawValue, forKey: Key.motionSpeed) }
+    }
+
+    public var turbulence: Turbulence {
+        get { Turbulence(rawValue: defaults.string(forKey: Key.turbulence) ?? "") ?? .normal }
+        set { defaults.set(newValue.rawValue, forKey: Key.turbulence) }
+    }
+
+    /// Mirrors `SMAppService` registration so the menu can show a checkmark
+    /// without querying the service on every menu open.
+    public var openAtLogin: Bool {
+        get { defaults.bool(forKey: Key.openAtLogin) }
+        set { defaults.set(newValue, forKey: Key.openAtLogin) }
     }
 
     public var bandWidth: BandWidth {

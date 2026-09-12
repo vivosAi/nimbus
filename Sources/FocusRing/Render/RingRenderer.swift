@@ -18,14 +18,19 @@ final class RingRenderer: NSObject, MTKViewDelegate {
 
     /// The tracked window's rect in the view's own point coordinates.
     var windowRect: CGRect = .zero
-    var palette: Palette = Palette.all[0]
-    var intensity: Float = 0.75
     var bandInnerPoints: CGFloat = 6
     var bandOuterPoints: CGFloat = 18
     var cornerRadiusPoints: CGFloat = 11
     var debugMode: Int = 0
+
+    /// Baselines, before the flare's transient multipliers are applied.
     var flowSpeed: Float = 0.45
     var noiseScale: Float = 4.0
+
+    /// Evaluated every frame. Brightness, band width and speed all come off the
+    /// same decay curve so the ring relaxes as one thing.
+    var animator = Animator()
+    var paletteController = PaletteController()
 
     /// Four quads, two triangles each.
     private static let vertexCount = 24
@@ -124,26 +129,32 @@ final class RingRenderer: NSObject, MTKViewDelegate {
                                     Float(windowRect.origin.y) * scale,
                                     Float(windowRect.width) * scale,
                                     Float(windowRect.height) * scale)
-        uniforms.colorA = SIMD4(palette.colorA, 0)
-        uniforms.colorB = SIMD4(palette.colorB, 0)
-        uniforms.colorGlow = SIMD4(palette.colorGlow, 0)
+        // One clock for everything, monotonic so it survives wall-clock changes.
+        let now = CACurrentMediaTime()
+        let colors = paletteController.colors(at: now)
+        uniforms.colorA = SIMD4(colors.a, 0)
+        uniforms.colorB = SIMD4(colors.b, 0)
+        uniforms.colorGlow = SIMD4(colors.glow, 0)
+
+        let bandScale = animator.bandScale(at: now)
 
         uniforms.cornerRadius = Float(cornerRadiusPoints) * scale
         // Feather both edges by at least 1.5px or the ring aliases badly (§8.3).
         uniforms.bandInner = max(Float(bandInnerPoints) * scale, 1.5)
-        uniforms.bandOuter = max(Float(bandOuterPoints) * scale, 1.5)
+        // The band visibly swells at the peak of a flare and relaxes back.
+        uniforms.bandOuter = max(Float(bandOuterPoints) * scale * bandScale, 1.5)
         // 0.6 keeps the bloom essentially spent by the time it reaches the
         // overlay's edge. Any higher and the glow gets clipped into a visible
         // rectangle where the overlay window ends.
         uniforms.glowFalloff = max(Float(bandOuterPoints) * scale * 0.6, 1.0)
 
         uniforms.debugMode = Float(debugMode)
-        uniforms.time = Float(CACurrentMediaTime() - startTime)
-        uniforms.intensity = intensity
+        uniforms.time = Float(now - startTime)
+        uniforms.intensity = animator.intensity(at: now)
         // Slow enough that the movement reads as drifting rather than
         // flickering — §8.3's photosensitivity constraint. The structure comes
         // from the turbulence, not from speed.
-        uniforms.flowSpeed = flowSpeed
+        uniforms.flowSpeed = flowSpeed * animator.speedScale(at: now)
         // Features per turn around the ring. At 2.5 there were only two or
         // three, which read as a single bright dot orbiting the window.
         uniforms.noiseScale = noiseScale
@@ -156,7 +167,6 @@ final class RingRenderer: NSObject, MTKViewDelegate {
             }
         }
 
-        let now = CACurrentMediaTime()
         if debugMode > 0, now - lastDiagnosticAt > 1.0 {
             if let layer = view.layer as? CAMetalLayer {
                 Log.write("  layer bounds=\(layer.bounds) scale=\(layer.contentsScale) "

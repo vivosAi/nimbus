@@ -29,6 +29,9 @@ final class OverlayController {
     /// the window's new resting position without waiting for a focus event.
     private var isSuppressedByMotion = false
 
+    /// The last window a flare was fired for, so repeats are suppressed.
+    private var lastFlaredState: FocusState?
+
     init(prefs: Preferences) {
         self.prefs = prefs
 
@@ -99,6 +102,47 @@ final class OverlayController {
         }
     }
 
+    /// The flare fires on a change to a *different* window, not on every
+    /// geometry update — otherwise dragging or resizing would keep it lit and
+    /// it would never settle.
+    private func flareIfWindowChanged(to state: FocusState) {
+        guard state.isDifferentWindow(from: lastFlaredState) else { return }
+        lastFlaredState = state
+        renderer?.animator.flare(at: CACurrentMediaTime())
+    }
+
+    /// Returning to the machine is exactly when you are most likely to type into
+    /// the wrong window, so it gets the same pulse a focus change does.
+    func flareNow() {
+        renderer?.animator.flare(at: CACurrentMediaTime())
+    }
+
+    // MARK: - Palette
+
+    var currentPalette: Palette { renderer?.paletteController.current ?? Palette.all[0] }
+    var paletteIndex: Int { renderer?.paletteController.currentIndex ?? 0 }
+    var paletteRecent: [Int] { renderer?.paletteController.recent ?? [] }
+
+    func transitionPalette(to palette: Palette) {
+        renderer?.paletteController.transition(to: palette, at: CACurrentMediaTime())
+    }
+
+    func pickNextPalette<G: RandomNumberGenerator>(excluding disabled: Set<String>,
+                                                   using generator: inout G) -> Palette {
+        renderer?.paletteController.pickNext(excluding: disabled, using: &generator)
+            ?? Palette.all[0]
+    }
+
+    func restorePalette(index: Int, recent: [Int]) {
+        renderer?.paletteController = PaletteController(startIndex: index, recent: recent)
+    }
+
+    /// Re-read the settings that live on the view rather than in the uniforms.
+    func applySettings() {
+        metalView?.preferredFramesPerSecond = prefs.frameRate
+        borderView?.isHidden = renderer != nil && prefs.debugMode == 0
+    }
+
     /// The only entry point. `nil` hides the ring.
     func update(with state: FocusState?) {
         guard let state, shouldShow(state) else {
@@ -135,6 +179,10 @@ final class OverlayController {
                                                   window: state.frame)
         if let renderer {
             renderer.debugMode = prefs.debugMode
+            renderer.flowSpeed = prefs.motionSpeed.flowSpeed
+            renderer.noiseScale = prefs.turbulence.noiseScale
+            renderer.animator.idleIntensity = Float(prefs.idleIntensity)
+            renderer.animator.flareDuration = Float(prefs.flareDuration)
             renderer.windowRect = windowRectInView
             renderer.bandInnerPoints = inner
             renderer.bandOuterPoints = outer
@@ -155,6 +203,7 @@ final class OverlayController {
             Log.write("overlay shown for \(state.bundleID ?? "pid \(state.pid)")")
             if prefs.debugMode > 0 { logWindowDiagnostics() }
         }
+        flareIfWindowChanged(to: state)
         lastState = state
     }
 
