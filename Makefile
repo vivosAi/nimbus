@@ -55,9 +55,17 @@ bundle: release
 		cp Sources/Nimbus/Render/Shaders.metal $(APP)/Contents/Resources/; \
 	fi
 	@# --timestamp=none: no Apple timestamp server for a local identity.
-	@# touch: keeps the bundle and its payload mtimes consistent, which
-	@# codesign otherwise rejects as clock skew.
-	touch $(APP)
+	@# The whole tree is touched, not just the top directory: a universal
+	@# release build takes minutes, so the bundle directory and the binary
+	@# copied into it end up minutes apart, and codesign rejects that spread
+	@# as clock skew ("timestamps differ by N seconds").
+	find $(APP) -exec touch {} +
+	@# swift build ad-hoc signs the executable as its last step, and that
+	@# signature carries the time the build finished. Re-signing on top of it
+	@# intermittently fails with "timestamps differ by N seconds", where N is
+	@# how long the build took. Removing it first makes signing deterministic
+	@# rather than dependent on how slow the machine was that run.
+	-codesign --remove-signature $(APP) 2>/dev/null
 	codesign --force --options runtime $(TIMESTAMP) \
 		--sign "$(SIGN_IDENTITY)" \
 		--entitlements Resources/Nimbus.entitlements \
@@ -84,7 +92,7 @@ dev: stop build
 	@if [ -f Sources/Nimbus/Render/Shaders.metal ]; then \
 		cp Sources/Nimbus/Render/Shaders.metal $(APP)/Contents/Resources/; \
 	fi
-	touch $(APP)
+	find $(APP) -exec touch {} +
 	codesign --force $(TIMESTAMP) --sign "$(SIGN_IDENTITY)" \
 		--entitlements Resources/Nimbus.entitlements $(APP)
 
@@ -138,11 +146,20 @@ dist:
 	@test -n "$(DEV_ID)" || { echo "ERROR: set DEV_ID=\"Developer ID Application: NAME (TEAMID)\""; \
 		 echo "       Find it with: security find-identity -v -p codesigning"; exit 1; }
 	@xcrun notarytool history --keychain-profile $(NOTARY_PROFILE) >/dev/null 2>&1 || \
-		{ echo "ERROR: no notarisation credentials stored under profile '$(NOTARY_PROFILE)'."; \
+		{ echo "ERROR: no notarization credentials stored under profile '$(NOTARY_PROFILE)'."; \
 		  echo "       Run: xcrun notarytool store-credentials $(NOTARY_PROFILE) \\"; \
 		  echo "              --apple-id YOUR@EMAIL --team-id TEAMID --password APP-SPECIFIC-PASSWORD"; \
 		  exit 1; }
 	$(MAKE) bundle SIGN_IDENTITY="$(DEV_ID)" TIMESTAMP="--timestamp"
+	@# The app is notarized and stapled FIRST, before the image is built around
+	@# it. Stapling only the disk image leaves the copy the user drags into
+	@# Applications with no ticket of its own, so a first launch without a
+	@# network connection has to be refused. Both get a ticket, which is two
+	@# submissions and worth it.
+	ditto -c -k --keepParent $(APP) build/Nimbus-app.zip
+	xcrun notarytool submit build/Nimbus-app.zip --keychain-profile $(NOTARY_PROFILE) --wait
+	xcrun stapler staple $(APP)
+	xcrun stapler validate $(APP)
 	$(MAKE) dmg
 	codesign --force --timestamp --sign "$(DEV_ID)" $(DMG)
 	xcrun notarytool submit $(DMG) --keychain-profile $(NOTARY_PROFILE) --wait

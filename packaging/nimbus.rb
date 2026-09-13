@@ -7,8 +7,8 @@
 # .dmg this points at must be signed with a Developer ID and notarized. Fill in
 # version, sha256 (printed by `make dmg`) and the release URL.
 cask "nimbus" do
-  version "0.1.0"
-  sha256 "f88352d8387bd981929cce801c59bebea05a0454cb0cabebadeb5e5f49d6e5e2"
+  version "0.1.1"
+  sha256 "6692629b6019a7ebd8ebd55ce4613fb3e42b9d381e44b14a63ba20937e22a221"
 
   url "https://github.com/vivosAi/nimbus/releases/download/v#{version}/Nimbus.dmg"
   name "Nimbus"
