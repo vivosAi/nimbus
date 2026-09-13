@@ -72,6 +72,58 @@ func paths(_ s: CGFloat) -> (base: NSBezierPath, dash1: NSBezierPath, dash2: NSB
     return (ring(), dash1, dash2, window, radius)
 }
 
+/// Deterministic pseudo-random in 0...1, so the rays are identical at every
+/// icon size and the shape does not shimmer between 16px and 512px.
+func hash01(_ i: Int, _ salt: Int) -> CGFloat {
+    let x = sin(Double(i) * 12.9898 + Double(salt) * 78.233) * 43758.5453
+    return CGFloat(x - x.rounded(.down))
+}
+
+/// Rays radiating outward from the ring, like light off a filament.
+///
+/// A uniform blur around the band reads as a neon tube: flat, and sealed. What
+/// makes the real ring look alive is that its brightness varies along its
+/// length and throws light outward unevenly, so the rays are uneven in both
+/// length and brightness. They start inside the window and are covered by it,
+/// which is what makes them look like they emanate from the ring itself rather
+/// than from a point at the centre.
+func rays(_ s: CGFloat, count: Int = 96) -> CGImage {
+    layer(s) { s in
+        let centre = CGPoint(x: s / 2, y: s / 2)
+        for i in 0..<count {
+            let jitter = (hash01(i, 1) - 0.5) * 0.6
+            let angle = (CGFloat(i) / CGFloat(count)) * .pi * 2 + jitter * (.pi * 2 / CGFloat(count))
+
+            // Long and short rays interleaved. A few reach much further, which
+            // is what stops it reading as a regular starburst.
+            let r = hash01(i, 2)
+            let reach = 0.20 + 0.20 * pow(r, 2.2) + (r > 0.93 ? 0.13 : 0)
+            let inner = s * 0.13
+            let outer = s * reach
+
+            // Elongate along the window's aspect so the rays follow the shape
+            // of the ring rather than forming a circle around it.
+            let sx: CGFloat = 1.25, sy: CGFloat = 1.0
+            let tip = CGPoint(x: centre.x + cos(angle) * outer * sx,
+                              y: centre.y + sin(angle) * outer * sy)
+            let base = CGPoint(x: centre.x + cos(angle) * inner * sx,
+                               y: centre.y + sin(angle) * inner * sy)
+
+            let path = NSBezierPath()
+            path.move(to: base)
+            path.line(to: tip)
+            path.lineWidth = s * (0.004 + 0.010 * hash01(i, 3))
+            path.lineCapStyle = .round
+
+            // Colour varies around the ring, the way the two band colours mix.
+            let mix = hash01(i, 4)
+            let colour = mix < 0.34 ? colourB : (mix < 0.72 ? colourGlow : colourA)
+            srgb(colour, 0.30 + 0.55 * hash01(i, 5)).setStroke()
+            path.stroke()
+        }
+    }
+}
+
 func render(size s: CGFloat, to path: String) {
     // The light on its own, transparent — this is what gets blurred.
     let light = layer(s) { s in
@@ -82,6 +134,12 @@ func render(size s: CGFloat, to path: String) {
     }
     let wide = blurred(light, radius: s * 0.075, size: s)
     let tight = blurred(light, radius: s * 0.022, size: s)
+
+    // Rays get their own, softer blur — enough to read as light rather than as
+    // drawn lines, not so much that they smear into the uniform halo we are
+    // trying to get away from.
+    let rayLayer = blurred(rays(s), radius: s * 0.012, size: s)
+    let rayHaze = blurred(rays(s), radius: s * 0.055, size: s)
 
     let px = Int(s)
     let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: px, pixelsHigh: px,
@@ -103,6 +161,9 @@ func render(size s: CGFloat, to path: String) {
     // Additive, for the same reason the shader outputs premultiplied alpha:
     // light adds to what is behind it, it does not cover it.
     ctx.setBlendMode(.plusLighter)
+    // Rays go down first, so the band sits on top of its own light.
+    ctx.setAlpha(0.55); ctx.draw(rayHaze, in: full)
+    ctx.setAlpha(0.75); ctx.draw(rayLayer, in: full)
     ctx.setAlpha(0.85); ctx.draw(wide, in: full)
     ctx.setAlpha(0.95); ctx.draw(tight, in: full)
     ctx.setAlpha(1.0);  ctx.draw(light, in: full)
