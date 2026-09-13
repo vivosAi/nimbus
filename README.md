@@ -202,6 +202,23 @@ from it in a few places, each for a reason:
 - **The band is drawn as four quads** covering only the ring, not a
   full-viewport quad, so the interior of a large window is never shaded.
 
+## Say hello
+
+Nimbus is free, and it will stay free.
+
+If something is broken, if it behaves oddly on hardware I have not tried, or if
+you just have an idea — [open an issue](../../issues). Bug reports about Retina
+displays and multi-monitor setups are especially welcome, since those are the
+configurations with the least testing behind them.
+
+You can also find me on X: [@vivasonico](https://x.com/vivasonico). Happy to
+hear from you, whether that is a question, a complaint, or just to say it is
+useful.
+
+If it has saved you from typing into the wrong window one too many times and you
+feel like buying me a coffee, that is very kind — but never expected, and the
+app will never ask.
+
 ## Licence
 
 MIT. See [LICENSE](LICENSE).
