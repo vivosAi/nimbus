@@ -94,6 +94,17 @@ vec4 screenPanel(vec2 p, vec4 rect) {
     return vec4(col, 1.0 - smoothstep(-0.5, 1.0, d));
 }
 
+// Real macOS windows cast a soft shadow, and its absence is most of why a
+// mock-up looks flat. The focused window gets a deeper one, as it does on a
+// real desktop.
+float windowShadow(vec2 p, vec4 rect, float focused) {
+    vec2 halfSize = rect.zw * 0.5;
+    vec2 c = rect.xy + halfSize - vec2(0.0, rect.w * 0.015);
+    float d = sdRoundBox(p - c, halfSize, uCornerRadius + 3.0);
+    float spread = rect.w * (0.045 + 0.035 * focused);
+    return exp(-max(d, 0.0) / spread) * (0.45 + 0.25 * focused);
+}
+
 // A window: body, title bar, traffic lights.
 vec4 windowLayer(vec2 p, vec4 rect, float focused) {
     vec2 halfSize = rect.zw * 0.5;
@@ -182,16 +193,20 @@ void main() {
     vec4 s1 = screenPanel(p, uScreen1);
     col = mix(col, s1.rgb, s1.a);
 
-    // Index order is stacking order, back to front. Unfocused windows first,
-    // then the focused one and its ring on top of everything.
+    // Index order is stacking order, back to front. Each window is preceded by
+    // its own shadow so it falls on what is behind it, not on itself.
     for (int i = 0; i < 4; i++) {
         float fi = float(i);
         if (abs(fi - uFocusIndex) < 0.5) continue;
-        vec4 w = windowLayer(p, rectFor(fi), 0.0);
+        vec4 r = rectFor(fi);
+        col *= 1.0 - windowShadow(p, r, 0.0);
+        vec4 w = windowLayer(p, r, 0.0);
         col = mix(col, w.rgb, w.a);
     }
 
-    vec4 focused = windowLayer(p, rectFor(uFocusIndex), 1.0);
+    vec4 fr = rectFor(uFocusIndex);
+    col *= 1.0 - windowShadow(p, fr, 1.0);
+    vec4 focused = windowLayer(p, fr, 1.0);
     col = mix(col, focused.rgb, focused.a);
 
     vec4 r = ring(p, rectFor(uFocusIndex));
@@ -234,7 +249,7 @@ function compile(gl, type, src) {
   return sh;
 }
 
-export function start(canvas) {
+export function start(canvas, labels) {
   const gl = canvas.getContext("webgl", { antialias: false, alpha: false });
   if (!gl) { throw new Error("WebGL unavailable"); }
 
@@ -276,6 +291,7 @@ export function start(canvas) {
   let focusIndex = 1;
   let rects = [];
   let screens = [];
+  let labelledAt = "";
 
   // Palette cross-fade, as in the app: a hard cut reads as a glitch, so one
   // colour always dissolves into the next.
@@ -334,11 +350,11 @@ export function start(canvas) {
   // keyboard focus actually costs you something. Windows are laid out inside
   // each display in landscape proportions, and overlap, the way real ones do.
   function layout(W, H) {
-    const sw = W * 0.475;
+    const sw = W * 0.484;
     const sh = sw * (10 / 16);            // a 16:10 display
     const sy = (H - sh) / 2;
-    const s0 = [W * 0.012, sy, sw, sh];
-    const s1 = [W * 0.513, sy, sw, sh];
+    const s0 = [W * 0.008, sy, sw, sh];
+    const s1 = [W * 0.508, sy, sw, sh];
 
     // Placed relative to whichever display they sit on.
     const inset = (s, x, y, w, h) => [s[0] + s[2] * x, s[1] + s[3] * y,
@@ -399,6 +415,21 @@ export function start(canvas) {
 
     const W = canvas.width, H = canvas.height;
     const scene = layout(W, H);
+
+    // Keep the screen captions under the displays the renderer draws, instead
+    // of hard-coded percentages that drift whenever the layout changes. Only
+    // touched when the canvas size changes, to avoid per-frame layout work.
+    const sizeKey = W + "x" + H;
+    if (labels && sizeKey !== labelledAt) {
+      labelledAt = sizeKey;
+      scene.screens.forEach((r, i) => {
+        const el = labels[i];
+        if (!el) return;
+        el.style.left = ((r[0] + r[2] / 2) / W * 100) + "%";
+        el.style.top = ((H - r[1]) / H * 100) + "%";
+        el.style.marginTop = "9px";
+      });
+    }
     // Scale the ring against a simulated display rather than the whole canvas,
     // or the band reads as far thicker than it is in the app.
     const s = scene.screens[0][2] / 700;

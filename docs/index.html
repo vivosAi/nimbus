@@ -32,21 +32,19 @@
   .tag { font-size: 19px; color: var(--dim); margin: 0 auto; max-width: 620px; }
   .stage {
     position: relative; border-radius: 14px; overflow: hidden;
-    border: 1px solid var(--line); background: #000; aspect-ratio: 16 / 10;
+    border: 1px solid var(--line); background: #000; aspect-ratio: 5 / 2;
+    box-shadow: 0 24px 60px rgba(0,0,0,.55);
   }
   canvas { display: block; width: 100%; height: 100%; }
-  /* Screen labels, positioned to match the layout the shader draws. The two
-     displays occupy 1.2%-48.7% and 51.3%-98.8% horizontally, and 26.25%-73.75%
-     vertically, which is where these percentages come from. */
+  /* Positioned by the renderer from the layout it actually draws, rather than
+     from percentages that have to be kept in step with it by hand. */
   .screen-label {
-    position: absolute; top: 75.5%; font-size: 11px; letter-spacing: .10em;
+    position: absolute; font-size: 11px; letter-spacing: .10em;
     text-transform: uppercase; color: rgba(255,255,255,.34);
     pointer-events: none; transform: translateX(-50%);
   }
-  .screen-label.one { left: 25%; }
-  .screen-label.two { left: 75%; }
   .callout {
-    position: absolute; left: 50%; top: 5.5%; transform: translateX(-50%);
+    position: absolute; left: 50%; top: 16px; transform: translateX(-50%);
     background: rgba(14,17,28,.82); border: 1px solid rgba(255,255,255,.14);
     color: #dfe3ef; font-size: 13px; padding: 8px 16px; border-radius: 999px;
     pointer-events: none; backdrop-filter: blur(8px);
@@ -54,34 +52,62 @@
   }
   .callout.gone { opacity: 0; }
   .controls {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-    gap: 18px 26px; margin-top: 22px; padding: 20px 22px;
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 22px 28px; margin-top: 20px; padding: 22px 24px;
     background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.35);
   }
-  label { display: block; font-size: 12px; color: var(--dim); margin-bottom: 7px;
-          text-transform: uppercase; letter-spacing: .05em; }
-  input[type=range] { width: 100%; accent-color: var(--accent); }
-  .swatches { display: flex; flex-wrap: wrap; gap: 7px; }
+  .controls .span-2 { grid-column: span 2; }
+  .controls .span-4 { grid-column: 1 / -1; }
+  label { display: block; font-size: 11px; color: var(--dim); margin-bottom: 9px;
+          text-transform: uppercase; letter-spacing: .07em; }
+  input[type=range] {
+    width: 100%; accent-color: var(--accent); margin: 0; display: block;
+    height: 22px;
+  }
+  /* Ten swatches in one row, never 8 + 2 orphans. */
+  .swatches { display: grid; grid-template-columns: repeat(10, 1fr);
+              gap: 8px; max-width: 420px; }
   .swatch {
-    width: 24px; height: 24px; border-radius: 50%; cursor: pointer;
+    aspect-ratio: 1; width: 100%; border-radius: 50%; cursor: pointer;
     border: 2px solid transparent; padding: 0;
+    box-shadow: 0 2px 6px rgba(0,0,0,.5), inset 0 1px 1px rgba(255,255,255,.25);
+    transition: transform .12s ease, border-color .12s ease;
   }
+  .swatch:hover { transform: translateY(-2px); }
   .swatch[aria-pressed="true"] { border-color: var(--text); }
   button.action {
-    background: #1d2133; color: var(--text); border: 1px solid var(--line);
-    border-radius: 8px; padding: 9px 14px; font-size: 14px; cursor: pointer;
-    font-family: inherit;
+    background: linear-gradient(#232840, #1a1e30); color: var(--text);
+    border: 1px solid #2e3350; border-radius: 9px; padding: 10px 16px;
+    font-size: 14px; cursor: pointer; font-family: inherit;
+    box-shadow: 0 3px 8px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.07);
+    transition: transform .12s ease, box-shadow .12s ease;
   }
-  button.action:hover { background: #262b42; }
+  button.action:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.10);
+  }
+  button.action:active { transform: translateY(1px); box-shadow: 0 2px 5px rgba(0,0,0,.4); }
   .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
   .cta { text-align: center; margin: 44px 0 8px; }
-  .cta a {
+  /* Scoped to the button itself. `.cta a` also matched the small link in the
+     subtitle below, rendering it as a second oversized button on top of the
+     text. */
+  .cta .download {
     display: inline-block; background: var(--accent); color: #08111c;
-    text-decoration: none; font-weight: 650; padding: 13px 26px;
-    border-radius: 9px; font-size: 16px;
+    text-decoration: none; font-weight: 650; padding: 14px 28px;
+    border-radius: 10px; font-size: 16px;
+    box-shadow: 0 8px 22px rgba(124,196,255,.22), 0 2px 6px rgba(0,0,0,.4);
+    transition: transform .12s ease, box-shadow .12s ease;
   }
-  .cta .sub { color: var(--dim); font-size: 13px; margin-top: 12px; }
-  .cta .sub a { color: var(--dim); }
+  .cta .download:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(124,196,255,.30), 0 3px 8px rgba(0,0,0,.45);
+  }
+  .cta .sub { color: var(--dim); font-size: 13px; margin-top: 14px; }
+  .cta .sub a { color: var(--dim); text-decoration: underline;
+                text-underline-offset: 3px; }
+  .cta .sub a:hover { color: var(--text); }
   section { margin-top: 52px; }
   h2 { font-size: 21px; margin: 0 0 12px; letter-spacing: -0.01em; }
   p { color: #c3c8d8; }
@@ -115,14 +141,21 @@
   <div class="stage">
     <canvas id="c"></canvas>
     <div class="callout" id="callout">Click any window to give it keyboard focus</div>
-    <div class="screen-label one">Screen 1</div>
-    <div class="screen-label two">Screen 2</div>
+    <div class="screen-label" id="label0">Screen 1</div>
+    <div class="screen-label" id="label1">Screen 2</div>
   </div>
 
   <div class="controls">
-    <div>
+    <div class="span-2">
       <label for="palette">Colour</label>
       <div class="swatches" id="palette"></div>
+    </div>
+    <div class="span-2">
+      <label>Colour rotation</label>
+      <div class="row">
+        <button class="action" id="rotate" aria-pressed="true">Rotating: on</button>
+        <button class="action" id="next">Next colour</button>
+      </div>
     </div>
     <div>
       <label for="brightness">Brightness at rest</label>
@@ -140,17 +173,10 @@
       <label for="turb">Motion style</label>
       <input type="range" id="turb" min="1.5" max="8" step="0.1" value="4">
     </div>
-    <div>
-      <label>Colour rotation</label>
-      <div class="row">
-        <button class="action" id="rotate" aria-pressed="true">Rotating: on</button>
-        <button class="action" id="next">Next colour</button>
-      </div>
-    </div>
   </div>
 
   <div class="cta">
-    <a href="https://github.com/vivosAi/nimbus/releases/latest">Download for macOS</a>
+    <a class="download" href="https://github.com/vivosAi/nimbus/releases/latest">Download for macOS</a>
     <div class="sub">
       Free and open source ·
       <a href="https://github.com/vivosAi/nimbus">Source on GitHub</a> ·
@@ -242,7 +268,8 @@ import { start } from "./ring.js";
 const canvas = document.getElementById("c");
 let app;
 try {
-  app = start(canvas);
+  app = start(canvas, [document.getElementById("label0"),
+                       document.getElementById("label1")]);
 } catch (e) {
   document.querySelector(".stage").innerHTML =
     '<div style="padding:60px 24px;text-align:center;color:#969bb0">' +
