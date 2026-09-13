@@ -21,6 +21,7 @@ final class StatusItem: NSObject, NSMenuDelegate {
     var onSettingsChanged: (() -> Void)?
     var onGrantPermission: (() -> Void)?
     var onNextColor: (() -> Void)?
+    var onOpenURL: ((URL) -> Void)?
     var onChooseColor: ((Palette) -> Void)?
     var onQuit: (() -> Void)?
 
@@ -114,6 +115,19 @@ final class StatusItem: NSObject, NSMenuDelegate {
         let login = item(title: "Open at Login", action: #selector(toggleOpenAtLogin))
         login.state = prefs.openAtLogin ? .on : .off
         menu.addItem(login)
+
+        menu.addItem(.separator())
+
+        // Version is read from the bundle rather than written here, so it can
+        // never disagree with what was actually shipped. Without it, a bug
+        // report cannot say which build it is about.
+        let version = NSMenuItem(title: "Nimbus \(StatusItem.versionString)",
+                                 action: nil, keyEquivalent: "")
+        version.isEnabled = false
+        menu.addItem(version)
+
+        menu.addItem(item(title: "Say hello on X…", action: #selector(openX)))
+        menu.addItem(item(title: "Source and issues…", action: #selector(openSource)))
 
         menu.addItem(item(title: "Quit Nimbus", action: #selector(quit), key: "q"))
     }
@@ -338,6 +352,15 @@ final class StatusItem: NSObject, NSMenuDelegate {
         return entry
     }
 
+    /// e.g. "0.1.0 (1)". Both come from Info.plist.
+    static var versionString: String {
+        let info = Bundle.main.infoDictionary
+        let short = info?["CFBundleShortVersionString"] as? String ?? "?"
+        let build = info?["CFBundleVersion"] as? String
+        guard let build, build != short else { return short }
+        return "\(short) (\(build))"
+    }
+
     private func shortName(for bundleID: String) -> String {
         bundleID.split(separator: ".").last.map(String.init)?.capitalized ?? bundleID
     }
@@ -410,6 +433,14 @@ final class StatusItem: NSObject, NSMenuDelegate {
         if disabled.contains(name) { disabled.remove(name) } else { disabled.insert(name) }
         prefs.disabledPalettes = disabled
         onSettingsChanged?()
+    }
+
+    @objc private func openX() {
+        onOpenURL?(URL(string: "https://x.com/vivasonico")!)
+    }
+
+    @objc private func openSource() {
+        onOpenURL?(URL(string: "https://github.com/vivosAi/nimbus")!)
     }
 
     @objc private func nextColor() { onNextColor?() }

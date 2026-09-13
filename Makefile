@@ -12,11 +12,19 @@ BUNDLE_ID     := io.github.vivosai.nimbus
 # self-signed local identity, so it is off by default and switched on by `dist`.
 TIMESTAMP     ?= --timestamp=none
 APP           := build/Nimbus.app
-# A self-signed local identity, used only so the Accessibility grant survives
-# rebuilds — macOS keys that permission to the code signature, and ad-hoc
-# signing changes it every build. Not a release credential: no other Mac trusts
-# it. For distribution, override this with a Developer ID and notarise.
-SIGN_IDENTITY ?= FocusRing Dev
+# macOS keys the Accessibility grant to the code signature, so an unstable
+# identity means re-granting the permission after every build.
+#
+# Prefer a Developer ID when the machine has one: then local builds carry the
+# same signature as released ones, and the permission survives both rebuilds
+# and updates. Fall back to a self-signed local identity otherwise — see the
+# README for creating one. A self-signed identity is not a distribution
+# credential; no other Mac trusts it.
+SIGN_IDENTITY ?= $(shell security find-identity -v -p codesigning 2>/dev/null \
+    | sed -n 's/.*"\(Developer ID Application: [^"]*\)".*/\1/p' | head -1)
+ifeq ($(strip $(SIGN_IDENTITY)),)
+SIGN_IDENTITY := FocusRing Dev
+endif
 ARCHS         := --arch arm64 --arch x86_64
 
 .PHONY: all build release test bundle dev run dev-run stop clean reset-permission cert-info icon dmg dist

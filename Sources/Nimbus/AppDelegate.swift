@@ -34,6 +34,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem.onGrantPermission = { [weak self] in self?.requestPermission() }
         statusItem.onNextColor = { [weak self] in self?.rotatePalette(reason: "user") }
         statusItem.onChooseColor = { [weak self] palette in self?.choosePalette(palette) }
+        statusItem.onOpenURL = { NSWorkspace.shared.open($0) }
         statusItem.onQuit = { NSApp.terminate(nil) }
 
         permission.onChange = { [weak self] trusted in
