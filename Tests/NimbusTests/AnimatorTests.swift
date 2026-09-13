@@ -96,7 +96,7 @@ final class PaletteControllerTests: XCTestCase {
     }
 
     /// With almost everything disabled the recency rule cannot be satisfied.
-    /// It must relax rather than deadlock on a single colour forever.
+    /// It must relax rather than deadlock on a single color forever.
     func testRelaxesRecencyRuleWhenFewPalettesAreEnabled() {
         var rng = SeededGenerator(state: 99)
         let c = PaletteController()

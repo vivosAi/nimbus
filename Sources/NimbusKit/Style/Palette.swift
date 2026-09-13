@@ -1,19 +1,19 @@
 import simd
 
-/// A ring colour scheme.
+/// A ring color scheme.
 ///
 /// Authored as sRGB hex for legibility but stored as **linear RGB**, because
-/// every operation done to these values — mixing the two band colours, and
+/// every operation done to these values — mixing the two band colors, and
 /// cross-fading one palette into the next — is an interpolation, and
 /// interpolating in gamma space produces muddy, desaturated mid-tones. On a
-/// two-colour ring that is very visible.
+/// two-color ring that is very visible.
 public struct Palette: Equatable {
     public let name: String
     public let colorA: SIMD3<Float>
     public let colorB: SIMD3<Float>
     public let colorGlow: SIMD3<Float>
 
-    /// Authoring initialiser, taking sRGB hex.
+    /// Authoring initializer, taking sRGB hex.
     public init(name: String, a: UInt32, b: UInt32, glow: UInt32) {
         self.name = name
         self.colorA = Palette.linear(from: a)
@@ -47,7 +47,7 @@ public struct Palette: Equatable {
         Palette(name: "Copper",      a: 0xFF9100, b: 0xFFD180, glow: 0xFF6D00),
     ]
 
-    // MARK: - Colour space
+    // MARK: - Color space
 
     public static func linear(from hex: UInt32) -> SIMD3<Float> {
         SIMD3(srgbToLinear(Float((hex >> 16) & 0xFF) / 255),

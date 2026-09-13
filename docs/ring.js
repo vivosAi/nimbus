@@ -174,13 +174,13 @@ vec4 ring(vec2 p, vec4 rect) {
 
     float across = clamp((d + uBandInner) / max(uBandInner + outerLocal, 1.0), 0.0, 1.0);
     vec3 core = mix(uColorB, uColorA, n);
-    vec3 colour = mix(core, uColorGlow, across * 0.55);
+    vec3 color = mix(core, uColorGlow, across * 0.55);
 
     float bandAlpha = band * (0.30 + 0.70 * n);
     float glowAlpha = glow * 0.32;
     float alpha = clamp((bandAlpha + glowAlpha) * uIntensity, 0.0, 1.0);
 
-    vec3 premul = colour * (bandAlpha * uIntensity) + uColorGlow * (glowAlpha * uIntensity);
+    vec3 premul = color * (bandAlpha * uIntensity) + uColorGlow * (glowAlpha * uIntensity);
     return vec4(premul, alpha);
 }
 
@@ -234,7 +234,7 @@ const PALETTES = [
 ];
 
 // The app stores palettes in linear RGB, because every operation done to them —
-// mixing the two band colours, cross-fading between palettes — is an
+// mixing the two band colors, cross-fading between palettes — is an
 // interpolation, and interpolating in gamma space gives muddy mid-tones.
 const srgbToLinear = c => c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
 const toLinear = hex => [16, 8, 0].map(s => srgbToLinear(((hex >> s) & 0xFF) / 255));
@@ -294,7 +294,7 @@ export function start(canvas, labels) {
   let labelledAt = "";
 
   // Palette cross-fade, as in the app: a hard cut reads as a glitch, so one
-  // colour always dissolves into the next.
+  // color always dissolves into the next.
   let paletteFrom = 1, paletteTo = 1, fadeStart = -100;
   const FADE = 3.0;
   let lastRotate = performance.now() / 1000;
@@ -325,7 +325,7 @@ export function start(canvas, labels) {
   }
 
   function currentPaletteIndexApprox(now) {
-    // Mid-fade the visible colour is a blend; for the next fade's starting
+    // Mid-fade the visible color is a blend; for the next fade's starting
     // point the nearer end is close enough and keeps this simple.
     return (now - fadeStart) < FADE / 2 ? paletteFrom : paletteTo;
   }

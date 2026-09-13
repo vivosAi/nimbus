@@ -43,7 +43,7 @@ final class OverlayController {
             view.device = renderer.metalDevice
             view.delegate = renderer
 
-            // Transparency: the window, its layer, and the clear colour all have
+            // Transparency: the window, its layer, and the clear color all have
             // to agree, or the ring arrives inside an opaque black rectangle.
             view.wantsLayer = true
             view.layer?.isOpaque = false

@@ -21,7 +21,7 @@ final class StatusItem: NSObject, NSMenuDelegate {
     var onSettingsChanged: (() -> Void)?
     var onGrantPermission: (() -> Void)?
     var onNextColor: (() -> Void)?
-    var onOpenURL: ((URL) -> Void)?
+    var onShowAbout: (() -> Void)?
     var onChooseColor: ((Palette) -> Void)?
     var onQuit: (() -> Void)?
 
@@ -61,16 +61,16 @@ final class StatusItem: NSObject, NSMenuDelegate {
         enabled.state = prefs.enabled ? .on : .off
         menu.addItem(enabled)
 
-        // Deliberately not "Next colour now (Aurora)": that reads as a promise
-        // about the *next* colour when it was naming the current one. The
-        // current palette belongs on the Colour item, where the checkmark
+        // Deliberately not "Next color now (Aurora)": that reads as a promise
+        // about the *next* color when it was naming the current one. The
+        // current palette belongs on the Color item, where the checkmark
         // already agrees with it.
-        let next = item(title: "Next colour now", action: #selector(nextColor))
+        let next = item(title: "Next color now", action: #selector(nextColor))
         next.isEnabled = prefs.enabled
         menu.addItem(next)
 
         menu.addItem(submenu: colorMenu(),
-                     title: currentPaletteName.isEmpty ? "Colour" : "Colour: \(currentPaletteName)",
+                     title: currentPaletteName.isEmpty ? "Color" : "Color: \(currentPaletteName)",
                      in: self)
 
         menu.addItem(.separator())
@@ -81,7 +81,7 @@ final class StatusItem: NSObject, NSMenuDelegate {
         menu.addItem(submenu: turbulenceMenu(), title: "Motion style", in: self)
         menu.addItem(submenu: flareMenu(), title: "Flare on switch", in: self)
         menu.addItem(submenu: frameRateMenu(), title: "Frame rate", in: self)
-        menu.addItem(submenu: rotationMenu(), title: "Change colour every", in: self)
+        menu.addItem(submenu: rotationMenu(), title: "Change color every", in: self)
         menu.addItem(submenu: idleMenu(), title: "When you are away", in: self)
 
         menu.addItem(.separator())
@@ -118,16 +118,10 @@ final class StatusItem: NSObject, NSMenuDelegate {
 
         menu.addItem(.separator())
 
-        // Version is read from the bundle rather than written here, so it can
-        // never disagree with what was actually shipped. Without it, a bug
-        // report cannot say which build it is about.
-        let version = NSMenuItem(title: "Nimbus \(StatusItem.versionString)",
-                                 action: nil, keyEquivalent: "")
-        version.isEnabled = false
-        menu.addItem(version)
-
-        menu.addItem(item(title: "Say hello on X…", action: #selector(openX)))
-        menu.addItem(item(title: "Source and issues…", action: #selector(openSource)))
+        // One item, not three. The version and the links live behind it: this
+        // menu exists so people can change a setting, and anything asking
+        // something of them here is in the way.
+        menu.addItem(item(title: "About Nimbus", action: #selector(showAbout)))
 
         menu.addItem(item(title: "Quit Nimbus", action: #selector(quit), key: "q"))
     }
@@ -189,7 +183,7 @@ final class StatusItem: NSObject, NSMenuDelegate {
             entry.target = self
             entry.state = palette.name == currentPaletteName ? .on : .off
             entry.representedObject = palette.name
-            // A swatch, so the list can be read by colour rather than by name.
+            // A swatch, so the list can be read by color rather than by name.
             entry.image = StatusItem.swatch(for: palette)
             menu.addItem(entry)
         }
@@ -202,11 +196,11 @@ final class StatusItem: NSObject, NSMenuDelegate {
     }
 
     /// Which palettes the timer is allowed to choose from (§8.5). Separate from
-    /// picking one now, because wanting to see a colour is not the same as
+    /// picking one now, because wanting to see a color is not the same as
     /// wanting it to keep coming back.
     private func rotationMembershipMenu() -> NSMenu {
         let menu = NSMenu()
-        let hint = NSMenuItem(title: "Colours the timer may choose from",
+        let hint = NSMenuItem(title: "Colors the timer may choose from",
                               action: nil, keyEquivalent: "")
         hint.isEnabled = false
         menu.addItem(hint)
@@ -221,7 +215,7 @@ final class StatusItem: NSObject, NSMenuDelegate {
             entry.state = disabled.contains(palette.name) ? .off : .on
             entry.representedObject = palette.name
             // Never let the user disable the last one; rotation needs somewhere
-            // to go and an empty list would silently freeze the colour.
+            // to go and an empty list would silently freeze the color.
             entry.isEnabled = disabled.contains(palette.name)
                 || disabled.count < Palette.all.count - 1
             menu.addItem(entry)
@@ -229,7 +223,7 @@ final class StatusItem: NSObject, NSMenuDelegate {
         return menu
     }
 
-    /// A filled circle in the palette's own colours, converted back from the
+    /// A filled circle in the palette's own colors, converted back from the
     /// stored linear RGB for display.
     private static func swatch(for palette: Palette) -> NSImage {
         let size = NSSize(width: 12, height: 12)
@@ -319,7 +313,7 @@ final class StatusItem: NSObject, NSMenuDelegate {
                 apply: { self.prefs.paletteInterval = $0 })
     }
 
-    /// Builds a radio-style submenu from a list of labelled values. Each item
+    /// Builds a radio-style submenu from a list of labeled values. Each item
     /// carries its value in `representedObject`, so there is one code path for
     /// reading the choice back regardless of the value's type.
     private func options<T>(_ choices: [(String, T)],
@@ -435,13 +429,7 @@ final class StatusItem: NSObject, NSMenuDelegate {
         onSettingsChanged?()
     }
 
-    @objc private func openX() {
-        onOpenURL?(URL(string: "https://x.com/vivasonico")!)
-    }
-
-    @objc private func openSource() {
-        onOpenURL?(URL(string: "https://github.com/vivosAi/nimbus")!)
-    }
+    @objc private func showAbout() { onShowAbout?() }
 
     @objc private func nextColor() { onNextColor?() }
     @objc private func grantPermission() { onGrantPermission?() }

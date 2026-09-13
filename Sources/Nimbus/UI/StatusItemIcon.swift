@@ -3,13 +3,13 @@ import AppKit
 /// The menu bar mark, drawn rather than shipped as an asset.
 ///
 /// Menu bar icons are *template* images: macOS keeps only the alpha channel and
-/// tints the result for the current menu bar, so no colour or gradient from the
+/// tints the result for the current menu bar, so no color or gradient from the
 /// actual ring can survive here. Only silhouette does, at around 18pt. Hence a
 /// window outline ringed by a broken band — the break-up is what the real ring
 /// looks like when the turbulence thins it, and it is also what keeps the mark
 /// from reading as a progress spinner.
 ///
-/// Drawn with a handler rather than rasterised once, so it is re-rendered at
+/// Drawn with a handler rather than rasterized once, so it is re-rendered at
 /// whatever backing scale the menu bar's display happens to have.
 enum StatusItemIcon {
 
@@ -27,8 +27,8 @@ enum StatusItemIcon {
     private static func draw(_ s: CGFloat) {
         NSColor.black.setStroke()
 
-        let centre = CGPoint(x: s / 2, y: s / 2)
-        let rect = CGRect(x: centre.x - s * 0.20, y: centre.y - s * 0.15,
+        let center = CGPoint(x: s / 2, y: s / 2)
+        let rect = CGRect(x: center.x - s * 0.20, y: center.y - s * 0.15,
                           width: s * 0.40, height: s * 0.30)
         let radius = s * 0.06
 

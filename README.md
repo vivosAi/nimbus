@@ -30,7 +30,7 @@ brew install --cask vivosAi/tap/nimbus
 Or download the latest `.dmg` from [Releases](../../releases), open it, and drag
 Nimbus to Applications.
 
-Signed and notarised, so it opens without Gatekeeper warnings either way.
+Signed and notarized, so it opens without Gatekeeper warnings either way.
 
 <details>
 <summary>Two things Homebrew may say that are not about Nimbus</summary>
@@ -69,14 +69,14 @@ Everything is in the menu bar icon.
 
 | | |
 |---|---|
-| **Colour** | Pick a palette, or choose which ones the timer rotates through |
+| **Color** | Pick a palette, or choose which ones the timer rotates through |
 | **Brightness** | How bright the ring sits between focus changes |
 | **Ring width** | Thin, normal or thick |
 | **Motion speed** | How fast the light travels around the ring |
 | **Motion style** | Broad slow swells, or fine churn |
 | **Flare on switch** | How long the bright pulse lasts when focus changes |
 | **Frame rate** | Peak rate; it halves automatically once the ring settles |
-| **Change colour every** | The colour rotates so you never stop noticing it |
+| **Change color every** | The color rotates so you never stop noticing it |
 | **Hide in full screen** / **Hide while dragging** | |
 | **Excluded apps** | Apps that never get a ring |
 | **Open at Login** | |
@@ -84,7 +84,7 @@ Everything is in the menu bar icon.
 The ring hides itself while you drag or resize a window — you already know which
 window you are dragging — and returns when it comes to rest.
 
-Ten colour schemes, rotating on a timer so the ring never becomes wallpaper:
+Ten color schemes, rotating on a timer so the ring never becomes wallpaper:
 
 ![The Plasma palette](docs/plasma.png)
 
@@ -251,6 +251,6 @@ If it has saved you from typing into the wrong window one too many times and you
 feel like buying me a coffee, that is very kind — but never expected, and the
 app will never ask.
 
-## Licence
+## License
 
 MIT. See [LICENSE](LICENSE).

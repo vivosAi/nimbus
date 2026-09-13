@@ -11,13 +11,13 @@ final class PaletteTests: XCTestCase {
     }
 
     /// Endpoints and the midpoint of the sRGB transfer curve. A common mistake
-    /// is a plain 2.2 power, which is wrong near black and shifts every colour.
+    /// is a plain 2.2 power, which is wrong near black and shifts every color.
     func testSRGBToLinearEndpointsAndKnee() {
         XCTAssertEqual(Palette.srgbToLinear(0), 0, accuracy: 1e-6)
         XCTAssertEqual(Palette.srgbToLinear(1), 1, accuracy: 1e-6)
         // Below the knee the curve is a straight line, not a power.
         XCTAssertEqual(Palette.srgbToLinear(0.04), 0.04 / 12.92, accuracy: 1e-6)
-        // Mid grey: 0.5 sRGB is ~0.214 linear, distinctly not 0.5.
+        // Mid gray: 0.5 sRGB is ~0.214 linear, distinctly not 0.5.
         XCTAssertEqual(Palette.srgbToLinear(0.5), 0.2140, accuracy: 1e-3)
     }
 

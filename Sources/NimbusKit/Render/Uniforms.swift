@@ -34,7 +34,7 @@ public struct Uniforms {
         params1 = .zero
     }
 
-    /// 0 = normal. 1 = paint rasterised fragments red. 2 = also replace the ring
+    /// 0 = normal. 1 = paint rasterized fragments red. 2 = also replace the ring
     /// geometry with a full-viewport quad. A diagnostic, not a feature.
     public var debugMode: Float {
         get { pad0.x } set { pad0.x = newValue }
@@ -53,7 +53,7 @@ public struct Uniforms {
     public var bandOuter: Float {
         get { params0.z } set { params0.z = newValue }
     }
-    /// Accumulated angle the noise has travelled around the ring, in radians.
+    /// Accumulated angle the noise has traveled around the ring, in radians.
     /// A phase rather than a timestamp: speed changes (the flare) must not move
     /// the pattern, only change how fast it advances from here.
     public var flowPhase: Float {

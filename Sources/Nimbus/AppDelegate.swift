@@ -10,6 +10,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private var statusItem: StatusItem!
     private var permissionWindow: PermissionWindow?
+    private var aboutWindow: AboutWindow?
     private var tracker: FocusTracker?
     private var overlay: OverlayController?
 
@@ -34,7 +35,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem.onGrantPermission = { [weak self] in self?.requestPermission() }
         statusItem.onNextColor = { [weak self] in self?.rotatePalette(reason: "user") }
         statusItem.onChooseColor = { [weak self] palette in self?.choosePalette(palette) }
-        statusItem.onOpenURL = { NSWorkspace.shared.open($0) }
+        statusItem.onShowAbout = { [weak self] in self?.showAbout() }
         statusItem.onQuit = { NSApp.terminate(nil) }
 
         permission.onChange = { [weak self] trusted in
@@ -93,6 +94,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         window.show()
         permissionWindow = window
+    }
+
+    private func showAbout() {
+        let window = aboutWindow ?? AboutWindow()
+        window.onOpenURL = { NSWorkspace.shared.open($0) }
+        aboutWindow = window
+        window.show()
     }
 
     private func requestPermission() {
@@ -161,7 +169,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let center = NSWorkspace.shared.notificationCenter
         // Waking and unlocking are both "the user has just come back", which is
         // exactly when the ring is most worth noticing — and the best moment for
-        // a new colour, since novelty is most useful on return (§8.5).
+        // a new color, since novelty is most useful on return (§8.5).
         center.addObserver(self, selector: #selector(userReturned),
                            name: NSWorkspace.didWakeNotification, object: nil)
         center.addObserver(self, selector: #selector(userReturned),

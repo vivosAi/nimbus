@@ -1,7 +1,7 @@
 import Foundation
 import simd
 
-/// Rotates the colour scheme over time and cross-fades between schemes (§8.5).
+/// Rotates the color scheme over time and cross-fades between schemes (§8.5).
 ///
 /// Rotation exists to stop the ring becoming invisible through familiarity, so
 /// the selection deliberately avoids repeating recent palettes, and transitions
@@ -51,7 +51,7 @@ public final class PaletteController {
 
         var candidates = enabled.filter { $0 != current && !recentNames.contains($0.name) }
         // With few palettes enabled the recency rule can exclude everything;
-        // relax it rather than getting stuck on one colour.
+        // relax it rather than getting stuck on one color.
         if candidates.isEmpty {
             candidates = enabled.filter { $0 != current }
         }
@@ -83,7 +83,7 @@ public final class PaletteController {
         transitionProgress(at: now) < 1
     }
 
-    /// The colours to upload this frame, interpolated in linear RGB.
+    /// The colors to upload this frame, interpolated in linear RGB.
     public func colors(at now: TimeInterval)
         -> (a: SIMD3<Float>, b: SIMD3<Float>, glow: SIMD3<Float>) {
         let t = Float(transitionProgress(at: now))
@@ -101,7 +101,7 @@ public final class PaletteController {
     private func blendedPalette(at now: TimeInterval) -> Palette {
         // Interrupting a transition: freeze the current blend as the new
         // starting point so the next fade begins from what is on screen,
-        // rather than snapping back to a colour nobody is looking at.
+        // rather than snapping back to a color nobody is looking at.
         let c = colors(at: now)
         return Palette(name: "\(current.name) (blend)",
                        colorA: c.a, colorB: c.b, colorGlow: c.glow)

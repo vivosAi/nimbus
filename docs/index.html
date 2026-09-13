@@ -94,15 +94,34 @@
      subtitle below, rendering it as a second oversized button on top of the
      text. */
   .cta .download {
+    position: relative; z-index: 1;
     display: inline-block; background: var(--accent); color: #08111c;
     text-decoration: none; font-weight: 650; padding: 14px 28px;
     border-radius: 10px; font-size: 16px;
-    box-shadow: 0 8px 22px rgba(124,196,255,.22), 0 2px 6px rgba(0,0,0,.4);
-    transition: transform .12s ease, box-shadow .12s ease;
+    box-shadow: 0 2px 6px rgba(0,0,0,.4);
+    transition: transform .12s ease;
   }
-  .cta .download:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 30px rgba(124,196,255,.30), 0 3px 8px rgba(0,0,0,.45);
+  /* The button wears the same ring the app draws: a drifting, breathing glow
+     in the palette colors. It is the one element on the page that should look
+     like the thing being downloaded. */
+  .cta .download::before {
+    content: ""; position: absolute; inset: -7px; z-index: -1;
+    border-radius: 16px;
+    background: linear-gradient(90deg, #7C4DFF, #00E5FF, #536DFE, #B388FF, #7C4DFF);
+    background-size: 300% 100%;
+    filter: blur(15px); opacity: .7;
+    animation: ring-drift 7s linear infinite, ring-breathe 3.4s ease-in-out infinite;
+  }
+  .cta .download:hover { transform: translateY(-2px); }
+  .cta .download:hover::before { opacity: .95; filter: blur(20px); }
+
+  @keyframes ring-drift  { to { background-position: 300% 0; } }
+  @keyframes ring-breathe { 50% { opacity: .92; filter: blur(19px); } }
+
+  /* Someone who has asked the system for less motion should not be given a
+     pulsing button. The glow stays; only the movement stops. */
+  @media (prefers-reduced-motion: reduce) {
+    .cta .download::before { animation: none; opacity: .8; }
   }
   .cta .sub { color: var(--dim); font-size: 13px; margin-top: 14px; }
   .cta .sub a { color: var(--dim); text-decoration: underline;
@@ -147,14 +166,14 @@
 
   <div class="controls">
     <div class="span-2">
-      <label for="palette">Colour</label>
+      <label for="palette">Color</label>
       <div class="swatches" id="palette"></div>
     </div>
     <div class="span-2">
-      <label>Colour rotation</label>
+      <label>Color rotation</label>
       <div class="row">
         <button class="action" id="rotate" aria-pressed="true">Rotating: on</button>
-        <button class="action" id="next">Next colour</button>
+        <button class="action" id="next">Next color</button>
       </div>
     </div>
     <div>
@@ -176,7 +195,7 @@
   </div>
 
   <div class="cta">
-    <a class="download" href="https://github.com/vivosAi/nimbus/releases/latest">Download for macOS</a>
+    <a class="download" href="https://github.com/vivosAi/nimbus/releases/latest/download/Nimbus.dmg">Download for macOS</a>
     <div class="sub">
       Free and open source ·
       <a href="https://github.com/vivosAi/nimbus">Source on GitHub</a> ·
@@ -185,20 +204,20 @@
   </div>
 
   <section>
-    <h2>Why the colour keeps changing</h2>
+    <h2>Why the color keeps changing</h2>
     <p>
       Anything constant fades from awareness. Psychologists call the general
       effect <strong>habituation</strong>, and the version where your receptors
       themselves stop responding to an unchanging stimulus
       <strong>sensory adaptation</strong>. Interface designers meet it as
       <em>banner blindness</em>: people stop seeing the thing in the same place,
-      in the same colour, every day — even when they are looking for it.
+      in the same color, every day — even when they are looking for it.
     </p>
     <p>
       A static border around a window would work beautifully for a week and be
       invisible by the end of the month. So Nimbus does two things about it. The
       ring never stops moving, because the eye is far better at detecting change
-      than steady state. And the colour scheme rotates, so no single look ever
+      than steady state. And the color scheme rotates, so no single look ever
       becomes the background you have learned to ignore.
     </p>
     <p class="note">
@@ -266,7 +285,7 @@
 </div>
 
 <script type="module">
-import { start } from "./ring.js?v=3";
+import { start } from "./ring.js?v=4";
 
 const canvas = document.getElementById("c");
 let app;

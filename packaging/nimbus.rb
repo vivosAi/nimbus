@@ -4,7 +4,7 @@
 #   brew install --cask vivosAi/tap/nimbus
 #
 # Since 1 September 2026 Homebrew refuses casks that fail Gatekeeper, so the
-# .dmg this points at must be signed with a Developer ID and notarised. Fill in
+# .dmg this points at must be signed with a Developer ID and notarized. Fill in
 # version, sha256 (printed by `make dmg`) and the release URL.
 cask "nimbus" do
   version "0.1.0"

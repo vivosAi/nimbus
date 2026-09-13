@@ -42,7 +42,7 @@ vertex VertexOut ring_vertex(uint vid [[vertex_id]],
         VertexOut out;
         out.position = float4(o.x * 2.0 - 1.0, o.y * 2.0 - 1.0, 0.0, 1.0);
         out.pixel = o * u.resolution;
-        // Collapse the remaining vertices so they rasterise nothing.
+        // Collapse the remaining vertices so they rasterize nothing.
         if (vid >= 6u) { out.position = float4(0.0, 0.0, 0.0, 1.0); }
         return out;
     }
@@ -126,7 +126,7 @@ static inline float valueNoise(float2 p) {
     return mix(mix(a, b, w.x), mix(c, d, w.x), w.y);
 }
 
-/// fBm normalised to roughly 0…1. Octaves are per-call: the turbulence layers
+/// fBm normalized to roughly 0…1. Octaves are per-call: the turbulence layers
 /// only need two, and paying for three everywhere is wasted on an iGPU.
 static inline float fbm(float2 p, int octaves) {
     float sum = 0.0;
@@ -153,7 +153,7 @@ static inline float sdRoundBox(float2 p, float2 b, float r) {
 
 fragment float4 ring_fragment(VertexOut in [[stage_in]],
                               constant Uniforms &u [[buffer(0)]]) {
-    // Debug mode 1+: paint every rasterised fragment opaque blue. Combined with
+    // Debug mode 1+: paint every rasterized fragment opaque blue. Combined with
     // mode 2 this separates "the window is not compositing" from "the ring
     // geometry or shading produces nothing". Blue against the yellow control
     // stroke — never red against green.
@@ -176,8 +176,8 @@ fragment float4 ring_fragment(VertexOut in [[stage_in]],
     const float glowFalloff  = u.params1.w;
 
     const float2 halfSize = u.windowRect.zw * 0.5;
-    const float2 centre = u.windowRect.xy + halfSize;
-    const float2 p = in.pixel - centre;
+    const float2 center = u.windowRect.xy + halfSize;
+    const float2 p = in.pixel - center;
 
     const float d = sdRoundBox(p, halfSize,
                                min(cornerRadius, min(halfSize.x, halfSize.y)));
@@ -208,11 +208,11 @@ fragment float4 ring_fragment(VertexOut in [[stage_in]],
     const float2 q = ring * noiseScale + float2(0.0, warpPhase);
     const float2 warp = float2(fbm(q, 2), fbm(q + float2(5.2, 1.3), 2));
 
-    // Large, slow tongues travelling one way...
+    // Large, slow tongues traveling one way...
     const float tongues = fbm(ring * noiseScale * 1.5
                               + warp * 1.15
                               + float2(flowPhase, -flowPhase * 0.55), 3);
-    // ...and finer, faster detail travelling the other, so the eye never
+    // ...and finer, faster detail traveling the other, so the eye never
     // resolves it into a single repeating loop.
     const float detail = fbm(ring * noiseScale * 3.5
                              - float2(flowPhase * 1.6, warpPhase * 1.65), 2);
@@ -237,7 +237,7 @@ fragment float4 ring_fragment(VertexOut in [[stage_in]],
         discard_fragment();
     }
 
-    // 0 at the inner edge of the band, 1 at the outer: lets the colour cool as
+    // 0 at the inner edge of the band, 1 at the outer: lets the color cool as
     // it reaches away from the window, the way a flame does.
     const float across = saturate((d + bandInner) / max(bandInner + outerLocal, 1.0));
 
@@ -252,8 +252,8 @@ fragment float4 ring_fragment(VertexOut in [[stage_in]],
     const float alpha = saturate((bandAlpha + glowAlpha) * intensity);
 
     // Premultiplied output, matching the pipeline's blend state. Letting the
-    // colour exceed the alpha makes the bloom read as light being added rather
-    // than as a grey film over whatever is behind it.
+    // color exceed the alpha makes the bloom read as light being added rather
+    // than as a gray film over whatever is behind it.
     const float3 premultiplied = bandColour * (bandAlpha * intensity)
                                + u.colorGlow.rgb * (glowAlpha * intensity);
 
