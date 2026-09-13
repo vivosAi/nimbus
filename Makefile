@@ -19,7 +19,7 @@ APP           := build/Nimbus.app
 SIGN_IDENTITY ?= FocusRing Dev
 ARCHS         := --arch arm64 --arch x86_64
 
-.PHONY: all build release test bundle dev run dev-run stop clean reset-permission cert-info icon dmg notarize
+.PHONY: all build release test bundle dev run dev-run stop clean reset-permission cert-info icon dmg dist
 
 all: bundle
 
@@ -144,6 +144,15 @@ dist:
 	@echo "Ready to upload: $(DMG)"
 	@echo "sha256 for the Homebrew cask:"
 	@shasum -a 256 $(DMG) | sed 's/^/  /'
+
+## A drag-to-Applications disk image, built from whatever is in $(APP).
+dmg:
+	@test -d $(APP) || { echo "No $(APP). Run 'make bundle' first."; exit 1; }
+	rm -rf build/dmg $(DMG)
+	mkdir -p build/dmg
+	cp -R $(APP) build/dmg/
+	ln -s /Applications build/dmg/Applications
+	hdiutil create -volname Nimbus -srcfolder build/dmg -ov -format UDZO $(DMG)
 
 cert-info:
 	@security find-identity -v -p codesigning
