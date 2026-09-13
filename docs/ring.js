@@ -346,19 +346,35 @@ export function start(canvas, labels) {
     }
   }
 
-  // Two displays side by side, because multi-monitor is where losing track of
-  // keyboard focus actually costs you something. Windows are laid out inside
-  // each display in landscape proportions, and overlap, the way real ones do.
+  // Two displays, because multi-monitor is where losing track of keyboard
+  // focus actually costs you something. Windows are laid out inside each
+  // display in landscape proportions, and overlap, the way real ones do.
+  //
+  // Side by side on a wide canvas; stacked on a narrow one. Side by side on a
+  // phone would make each display about 45% of an already narrow screen, at
+  // which point nothing inside it is legible.
   function layout(W, H) {
-    const sw = W * 0.484;
-    const sh = sw * (10 / 16);            // a 16:10 display
-    const sy = (H - sh) / 2;
-    const s0 = [W * 0.008, sy, sw, sh];
-    const s1 = [W * 0.508, sy, sw, sh];
+    const stacked = W / H < 1.35;
+    let s0, s1;
+    if (stacked) {
+      const sw = W * 0.96;
+      const sh = sw * (10 / 16);
+      const gap = H * 0.045;
+      const top = (H - sh * 2 - gap) / 2;
+      s0 = [W * 0.02, top + sh + gap, sw, sh];   // upper
+      s1 = [W * 0.02, top, sw, sh];              // lower
+    } else {
+      const sw = W * 0.484;
+      const sh = sw * (10 / 16);
+      const sy = (H - sh) / 2;
+      s0 = [W * 0.008, sy, sw, sh];
+      s1 = [W * 0.508, sy, sw, sh];
+    }
 
     // Placed relative to whichever display they sit on.
     const inset = (s, x, y, w, h) => [s[0] + s[2] * x, s[1] + s[3] * y,
                                       s[2] * w, s[3] * h];
+    void stacked;
     return {
       screens: [s0, s1],
       // Index order is stacking order: 1 sits over 0, 3 sits over 2.

@@ -14,8 +14,19 @@ brighter for a moment whenever focus changes.
 
 ![The ring around a focused window](docs/screenshot.png)
 
+<!-- VIDEO GOES HERE.
+     Edit this file on github.com and drag docs/demo.mp4 into the editor at this
+     spot. GitHub uploads it to its own asset host and inserts a URL that plays
+     inline. A <video> tag pointing at a file in this repository does not work:
+     GitHub's markdown renderer strips it. Delete this comment afterwards. -->
+
 **[Try it in your browser](https://vivosai.github.io/nimbus/)** — a live
 simulation of two displays, no install and no permissions needed.
+
+It is built around a quirk of perception: **your eye stops seeing what never
+changes.** So the ring never stops moving, and its color scheme rotates — a
+static marker would work beautifully for a week and be invisible by the end of
+the month.
 
 ## Install
 
@@ -88,7 +99,7 @@ Ten color schemes, rotating on a timer so the ring never becomes wallpaper:
 
 ![The Plasma palette](docs/plasma.png)
 
-There is a short screen recording at [docs/demo.mp4](docs/demo.mp4).
+
 
 ## What it can see
 

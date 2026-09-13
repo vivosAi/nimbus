@@ -137,8 +137,54 @@
   code { background: #1a1d2b; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
   footer { margin-top: 60px; text-align: center; color: var(--dim); font-size: 13px; }
   footer a { color: var(--dim); }
-  @media (max-width: 640px) {
-    h1 { font-size: 32px; } .tag { font-size: 17px; } .wrap { padding: 36px 16px 60px; }
+  .tag.why { font-size: 15px; margin-top: 14px; color: var(--dim); }
+  .tag.why strong { color: var(--text); font-weight: 600; }
+  .tag.why a { color: var(--accent); text-decoration: none; }
+  .tag.why a:hover { text-decoration: underline; }
+
+  /* The disclosure is a phone affordance; on a wide screen the controls are
+     simply there, with no summary to click. */
+  .controls-wrap > summary { display: none; }
+
+  @media (max-width: 760px) {
+    h1 { font-size: 32px; }
+    .tag { font-size: 16px; }
+    .tag.why { font-size: 14px; }
+    .wrap { padding: 32px 14px 56px; }
+
+    /* Portrait, so two stacked displays each get the full width. Side by side
+       on a phone leaves each about 45% of an already narrow screen, at which
+       point nothing inside them is legible. */
+    .stage { aspect-ratio: 3 / 4; }
+    .callout { font-size: 12px; padding: 7px 13px; max-width: 92%;
+               white-space: normal; text-align: center; }
+
+    /* Collapsed by default: at this width the panel fills the screen and
+       pushes the demo itself out of view. */
+    .controls-wrap > summary {
+      display: block; cursor: pointer; list-style: none;
+      margin-top: 16px; padding: 13px 18px; text-align: center;
+      background: var(--panel); border: 1px solid var(--line);
+      border-radius: 10px; color: var(--text); font-size: 15px;
+      box-shadow: 0 3px 8px rgba(0,0,0,.4);
+    }
+    .controls-wrap > summary::-webkit-details-marker { display: none; }
+    .controls-wrap[open] > summary { border-radius: 10px 10px 0 0; margin-bottom: 0; }
+    .controls-wrap[open] > summary::after { content: " ▲"; color: var(--dim); }
+    .controls-wrap:not([open]) > summary::after { content: " ▼"; color: var(--dim); }
+    .controls { grid-template-columns: 1fr; gap: 18px; margin-top: 0;
+                border-radius: 0 0 10px 10px; border-top: none; }
+    .controls .span-2, .controls .span-4 { grid-column: 1 / -1; }
+
+    /* 44px is the smallest comfortable touch target; 24px circles were not
+       pickable with a thumb. */
+    .swatches { grid-template-columns: repeat(5, 1fr); gap: 12px; max-width: none; }
+    .swatch { min-height: 44px; border-width: 3px; }
+    input[type=range] { height: 40px; }
+    button.action { padding: 13px 18px; font-size: 15px; flex: 1; }
+
+    .cta .download { display: block; padding: 17px 20px; font-size: 17px; }
+    .cta .sub { line-height: 1.9; }
   }
 </style>
 </head>
@@ -155,6 +201,11 @@
       <em>keyboard</em> is. Nimbus draws a ring of light around the window that
       has focus.
     </p>
+    <p class="tag why">
+      Built around a quirk of perception: <strong>your eye stops seeing what
+      never changes</strong>. So the ring never stops moving, and its color
+      rotates — <a href="#habituation">here is why</a>.
+    </p>
   </header>
 
   <div class="stage">
@@ -164,7 +215,9 @@
     <div class="screen-label" id="label1">Screen 2</div>
   </div>
 
-  <div class="controls">
+  <details class="controls-wrap" id="controlsWrap" open>
+    <summary>Show controls</summary>
+    <div class="controls">
     <div class="span-2">
       <label for="palette">Color</label>
       <div class="swatches" id="palette"></div>
@@ -192,7 +245,8 @@
       <label for="turb">Motion style</label>
       <input type="range" id="turb" min="1.5" max="8" step="0.1" value="4">
     </div>
-  </div>
+    </div>
+  </details>
 
   <div class="cta">
     <a class="download" href="https://github.com/vivosAi/nimbus/releases/latest/download/Nimbus.dmg">Download for macOS</a>
@@ -203,7 +257,7 @@
     </div>
   </div>
 
-  <section>
+  <section id="habituation">
     <h2>Why the color keeps changing</h2>
     <p>
       Anything constant fades from awareness. Psychologists call the general
@@ -285,7 +339,7 @@
 </div>
 
 <script type="module">
-import { start } from "./ring.js?v=4";
+import { start } from "./ring.js?v=5";
 
 const canvas = document.getElementById("c");
 let app;
@@ -301,6 +355,12 @@ try {
 if (app) {
   // The instruction has done its job once they have clicked; leave it after
   // that and it is just clutter over the thing they came to look at.
+  // Open on a wide screen, closed on a phone. Done here rather than with the
+  // `open` attribute, which cannot depend on viewport width.
+  const wrap = document.getElementById("controlsWrap");
+  const narrow = window.matchMedia("(max-width: 760px)");
+  if (narrow.matches) wrap.removeAttribute("open");
+
   const callout = document.getElementById("callout");
   canvas.addEventListener("click", () => callout.classList.add("gone"), { once: true });
 
