@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nimbus — see which window has keyboard focus</title>
+<meta name="description" content="A macOS menu bar utility that draws an animated ring of light around the window with keyboard focus.">
+<style>
+  :root {
+    --bg: #0a0b12; --panel: #12141f; --line: #232637;
+    --text: #e8eaf2; --dim: #969bb0; --accent: #7cc4ff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 940px; margin: 0 auto; padding: 56px 24px 80px; }
+  header { text-align: center; margin-bottom: 40px; }
+  h1 { font-size: 44px; margin: 0 0 12px; letter-spacing: -0.02em; font-weight: 650; }
+  .tag { font-size: 19px; color: var(--dim); margin: 0 auto; max-width: 620px; }
+  .stage {
+    position: relative; border-radius: 14px; overflow: hidden;
+    border: 1px solid var(--line); background: #000; aspect-ratio: 16 / 10;
+  }
+  canvas { display: block; width: 100%; height: 100%; }
+  .hint {
+    position: absolute; left: 14px; bottom: 12px; font-size: 12px;
+    color: rgba(255,255,255,.45); pointer-events: none;
+  }
+  .controls {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 18px 26px; margin-top: 22px; padding: 20px 22px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+  }
+  label { display: block; font-size: 12px; color: var(--dim); margin-bottom: 7px;
+          text-transform: uppercase; letter-spacing: .05em; }
+  input[type=range] { width: 100%; accent-color: var(--accent); }
+  .swatches { display: flex; flex-wrap: wrap; gap: 7px; }
+  .swatch {
+    width: 24px; height: 24px; border-radius: 50%; cursor: pointer;
+    border: 2px solid transparent; padding: 0;
+  }
+  .swatch[aria-pressed="true"] { border-color: var(--text); }
+  button.action {
+    background: #1d2133; color: var(--text); border: 1px solid var(--line);
+    border-radius: 8px; padding: 9px 14px; font-size: 14px; cursor: pointer;
+    font-family: inherit;
+  }
+  button.action:hover { background: #262b42; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .cta { text-align: center; margin: 44px 0 8px; }
+  .cta a {
+    display: inline-block; background: var(--accent); color: #08111c;
+    text-decoration: none; font-weight: 650; padding: 13px 26px;
+    border-radius: 9px; font-size: 16px;
+  }
+  .cta .sub { color: var(--dim); font-size: 13px; margin-top: 12px; }
+  .cta .sub a { color: var(--dim); }
+  section { margin-top: 52px; }
+  h2 { font-size: 21px; margin: 0 0 12px; letter-spacing: -0.01em; }
+  p { color: #c3c8d8; }
+  .note {
+    border-left: 3px solid var(--line); padding: 2px 0 2px 16px;
+    color: var(--dim); font-size: 14px;
+  }
+  code { background: #1a1d2b; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+  footer { margin-top: 60px; text-align: center; color: var(--dim); font-size: 13px; }
+  footer a { color: var(--dim); }
+  @media (max-width: 640px) {
+    h1 { font-size: 32px; } .tag { font-size: 17px; } .wrap { padding: 36px 16px 60px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Nimbus</h1>
+    <p class="tag">
+      You can always see where your pointer is. You can't see where your
+      <em>keyboard</em> is. Nimbus draws a ring of light around the window that
+      has focus.
+    </p>
+  </header>
+
+  <div class="stage">
+    <canvas id="c"></canvas>
+    <div class="hint">Live simulation — focus switches every few seconds</div>
+  </div>
+
+  <div class="controls">
+    <div>
+      <label for="palette">Colour</label>
+      <div class="swatches" id="palette"></div>
+    </div>
+    <div>
+      <label for="brightness">Brightness at rest</label>
+      <input type="range" id="brightness" min="0.08" max="0.7" step="0.01" value="0.30">
+    </div>
+    <div>
+      <label for="width">Ring width</label>
+      <input type="range" id="width" min="8" max="34" step="1" value="18">
+    </div>
+    <div>
+      <label for="speed">Motion speed</label>
+      <input type="range" id="speed" min="0.1" max="1.2" step="0.01" value="0.45">
+    </div>
+    <div>
+      <label for="turb">Motion style</label>
+      <input type="range" id="turb" min="1.5" max="8" step="0.1" value="4">
+    </div>
+    <div>
+      <label>Try it</label>
+      <div class="row">
+        <button class="action" id="switch">Switch window</button>
+        <button class="action" id="auto" aria-pressed="true">Auto: on</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="cta">
+    <a href="https://github.com/vivosAi/nimbus/releases/latest">Download for macOS</a>
+    <div class="sub">
+      Free and open source ·
+      <a href="https://github.com/vivosAi/nimbus">Source on GitHub</a> ·
+      macOS 13+ · Apple Silicon and Intel
+    </div>
+  </div>
+
+  <section>
+    <h2>What it's for</h2>
+    <p>
+      macOS marks the focused window with a slightly darker title bar. On one
+      screen that's subtle. Across several it's invisible. So you come back to
+      your desk, start typing, press Enter — and it goes somewhere you didn't
+      expect.
+    </p>
+    <p>
+      Nimbus makes that state impossible to miss. The ring is always moving, so
+      your eye keeps registering it instead of filtering it out, and it flares
+      brighter for a couple of seconds whenever focus changes.
+    </p>
+  </section>
+
+  <section>
+    <h2>What it can see</h2>
+    <p>
+      Nimbus needs Accessibility permission, which is the most powerful thing a
+      Mac app can ask for. So here is exactly what it does with it, and all of
+      it is checkable in the source.
+    </p>
+    <p>
+      It only ever <strong>reads</strong>, and it reads six things: which window
+      has focus, a window's parent, its position, its size, its role and its
+      subrole. Not window titles. Not text. Not contents. It never moves or
+      closes anything, never records the screen, and never makes a network
+      connection of any kind.
+    </p>
+    <p class="note">
+      Why Accessibility at all? It is the only supported way to find out which
+      window has keyboard focus. The alternative,
+      <code>CGWindowListCopyWindowInfo</code>, can't report focus — only
+      stacking order — and is increasingly gated behind Screen Recording, which
+      is far more invasive.
+    </p>
+  </section>
+
+  <section>
+    <h2>About this demo</h2>
+    <p class="note">
+      The animation above is the real shader, ported from Metal to WebGL, drawing
+      a simulated desktop. It is representative rather than pixel-exact — the app
+      itself draws over your actual windows, and its ring is transparent in the
+      middle so it never covers what you're working on.
+    </p>
+  </section>
+
+  <footer>
+    MIT licensed · <a href="https://github.com/vivosAi/nimbus">github.com/vivosAi/nimbus</a>
+  </footer>
+</div>
+
+<script type="module">
+import { start } from "./ring.js";
+
+const canvas = document.getElementById("c");
+let app;
+try {
+  app = start(canvas);
+} catch (e) {
+  document.querySelector(".stage").innerHTML =
+    '<div style="padding:60px 24px;text-align:center;color:#969bb0">' +
+    'This demo needs WebGL. The app itself does not — it uses Metal.</div>';
+}
+
+if (app) {
+  const swatches = document.getElementById("palette");
+  app.PALETTES.forEach((p, i) => {
+    const b = document.createElement("button");
+    b.className = "swatch";
+    b.type = "button";
+    b.title = p.name;
+    b.setAttribute("aria-label", p.name);
+    b.setAttribute("aria-pressed", String(i === app.state.palette));
+    const hex = n => "#" + n.toString(16).padStart(6, "0");
+    b.style.background = `linear-gradient(135deg, ${hex(p.a)}, ${hex(p.b)})`;
+    b.onclick = () => {
+      app.state.palette = i;
+      app.flare();
+      [...swatches.children].forEach((c, j) =>
+        c.setAttribute("aria-pressed", String(i === j)));
+    };
+    swatches.appendChild(b);
+  });
+
+  const bind = (id, key, fn = Number) => {
+    document.getElementById(id).addEventListener("input", e => {
+      app.state[key] = fn(e.target.value);
+    });
+  };
+  bind("brightness", "idleIntensity");
+  bind("width", "bandOuter");
+  bind("speed", "flowSpeed");
+  bind("turb", "noiseScale");
+
+  document.getElementById("switch").onclick = () => app.switchFocus();
+  const auto = document.getElementById("auto");
+  auto.onclick = () => {
+    app.state.autoSwitch = !app.state.autoSwitch;
+    auto.textContent = "Auto: " + (app.state.autoSwitch ? "on" : "off");
+    auto.setAttribute("aria-pressed", String(app.state.autoSwitch));
+  };
+}
+</script>
+</body>
+</html>
