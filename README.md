@@ -21,13 +21,45 @@ simulation of two displays, no install and no permissions needed.
 
 Requires macOS 13 Ventura or later. Apple Silicon and Intel.
 
-Download the latest `.dmg` from [Releases](../../releases), open it, and drag
+With [Homebrew](https://brew.sh):
+
+```sh
+brew install --cask vivosAi/tap/nimbus
+```
+
+Or download the latest `.dmg` from [Releases](../../releases), open it, and drag
 Nimbus to Applications.
+
+Signed and notarised, so it opens without Gatekeeper warnings either way.
+
+<details>
+<summary>Two things Homebrew may say that are not about Nimbus</summary>
+
+**"The following taps are not trusted"** — Homebrew now asks you to trust
+third-party taps before it will run their casks. Installing by the full name
+above trusts this one cask. To be explicit:
+
+```sh
+brew trust --cask vivosAi/tap/nimbus
+```
+
+**"We do not provide support for this platform... macOS on Intel x86_64"** —
+that is Homebrew withdrawing support for Intel Macs, announced in 2025. It is
+not about Nimbus, which is a universal binary and runs natively on both Intel
+and Apple Silicon. Intel users can ignore it, or install from the `.dmg`
+instead and avoid Homebrew entirely.
+
+</details>
 
 On first launch Nimbus asks for **Accessibility** permission. It cannot work
 without it — see [What it can see](#what-it-can-see) below for exactly what that
 does and does not allow. Tick the box in System Settings and Nimbus starts
 within a second; no restart needed.
+
+To update later, either `brew upgrade --cask nimbus`, or download the new
+`.dmg` and drag it over the old app. Your Accessibility permission carries
+across an update: macOS keys it to the bundle identifier and the signing
+certificate, and both stay the same between versions.
 
 ## Using it
 
