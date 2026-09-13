@@ -60,14 +60,17 @@ final class StatusItem: NSObject, NSMenuDelegate {
         enabled.state = prefs.enabled ? .on : .off
         menu.addItem(enabled)
 
-        let next = item(title: currentPaletteName.isEmpty
-                        ? "Next colour now"
-                        : "Next colour now (\(currentPaletteName))",
-                        action: #selector(nextColor))
+        // Deliberately not "Next colour now (Aurora)": that reads as a promise
+        // about the *next* colour when it was naming the current one. The
+        // current palette belongs on the Colour item, where the checkmark
+        // already agrees with it.
+        let next = item(title: "Next colour now", action: #selector(nextColor))
         next.isEnabled = prefs.enabled
         menu.addItem(next)
 
-        menu.addItem(submenu: colorMenu(), title: "Colour", in: self)
+        menu.addItem(submenu: colorMenu(),
+                     title: currentPaletteName.isEmpty ? "Colour" : "Colour: \(currentPaletteName)",
+                     in: self)
 
         menu.addItem(.separator())
 

@@ -12,8 +12,10 @@ Nimbus draws a ring of light around the window that currently has keyboard
 focus. It moves constantly, so your eye keeps registering it, and it pulses
 brighter for a moment whenever focus changes.
 
-<!-- TODO: add a screenshot or short GIF here. It is the single most useful
-     thing this README can have, and it has to be captured on a real machine. -->
+![The ring around a focused window](docs/screenshot.png)
+
+**[Try it in your browser](https://vivosai.github.io/nimbus/)** — a live
+simulation of two displays, no install and no permissions needed.
 
 ## Install
 
@@ -31,6 +33,8 @@ within a second; no restart needed.
 
 Everything is in the menu bar icon.
 
+![The menu](docs/menu.png)
+
 | | |
 |---|---|
 | **Colour** | Pick a palette, or choose which ones the timer rotates through |
@@ -47,6 +51,12 @@ Everything is in the menu bar icon.
 
 The ring hides itself while you drag or resize a window — you already know which
 window you are dragging — and returns when it comes to rest.
+
+Ten colour schemes, rotating on a timer so the ring never becomes wallpaper:
+
+![The Plasma palette](docs/plasma.png)
+
+There is a short screen recording at [docs/demo.mp4](docs/demo.mp4).
 
 ## What it can see
 
