@@ -136,6 +136,27 @@ Gatekeeper, so there is no unsigned distribution path.
 
 `packaging/nimbus.rb` is a Homebrew cask ready for a tap repository.
 
+## Known limitations
+
+**Not yet verified on Retina displays.** The 2x rendering path, and the scale
+change when a window moves between displays of different densities, are
+implemented but have not been confirmed on hardware.
+
+This is called out because of how that code fails when it is wrong: a
+`CAMetalLayer` with an incorrect `contentsScale` renders every frame correctly,
+presents without error, and composites to nothing at all. The ring is simply
+invisible and nothing anywhere reports a problem.
+
+If the ring looks blurry, is the wrong size, or does not appear on a Retina
+display, a bug report is welcome. `/tmp/nimbus.log` records a line reading
+`backing scale -> 2.0` when a 2x display is detected; please include it, or say
+if it is missing.
+
+**Mission Control** shows a stale ring. The overlay is a separate window and is
+not scaled into the Mission Control grid with everything else, so it stays where
+the window used to be until you come back. Cosmetic, and only while you are
+deliberately looking at all your windows at once.
+
 ## Performance
 
 Measured on a 2018 Intel MacBook Pro (i7-8559U, Iris Plus 655), which is roughly
