@@ -7,6 +7,10 @@
 # notarize target — nothing else here changes.
 
 BUNDLE_ID     := io.github.vivosai.nimbus
+
+# A secure timestamp is required for notarisation and impossible for a
+# self-signed local identity, so it is off by default and switched on by `dist`.
+TIMESTAMP     ?= --timestamp=none
 APP           := build/Nimbus.app
 # A self-signed local identity, used only so the Accessibility grant survives
 # rebuilds — macOS keys that permission to the code signature, and ad-hoc
@@ -46,7 +50,7 @@ bundle: release
 	@# touch: keeps the bundle and its payload mtimes consistent, which
 	@# codesign otherwise rejects as clock skew.
 	touch $(APP)
-	codesign --force --options runtime --timestamp=none \
+	codesign --force --options runtime $(TIMESTAMP) \
 		--sign "$(SIGN_IDENTITY)" \
 		--entitlements Resources/Nimbus.entitlements \
 		$(APP)
@@ -73,7 +77,7 @@ dev: stop build
 		cp Sources/Nimbus/Render/Shaders.metal $(APP)/Contents/Resources/; \
 	fi
 	touch $(APP)
-	codesign --force --timestamp=none --sign "$(SIGN_IDENTITY)" \
+	codesign --force $(TIMESTAMP) --sign "$(SIGN_IDENTITY)" \
 		--entitlements Resources/Nimbus.entitlements $(APP)
 
 dev-run: stop dev
@@ -112,30 +116,34 @@ icon:
 NOTARY_PROFILE ?= nimbus
 DMG            := build/Nimbus.dmg
 
-## Submit to Apple and staple the ticket into the app. Stapling matters: it lets
-## the app open on a Mac with no network connection.
-notarize:
-	@test -d $(APP) || { echo "No $(APP). Run 'make bundle' first."; exit 1; }
-	@codesign -dvvv $(APP) 2>&1 | grep -q "Developer ID Application" || \
-		{ echo "ERROR: $(APP) is not signed with a Developer ID."; \
-		  echo "       Notarisation will be rejected. Rebuild with:"; \
-		  echo "       make bundle SIGN_IDENTITY=\"Developer ID Application: NAME (TEAMID)\""; \
-		  exit 1; }
-	ditto -c -k --keepParent $(APP) build/Nimbus-notarize.zip
-	xcrun notarytool submit build/Nimbus-notarize.zip \
-		--keychain-profile $(NOTARY_PROFILE) --wait
-	xcrun stapler staple $(APP)
-	xcrun stapler validate $(APP)
+# Your Developer ID, e.g. "Developer ID Application: Acme Ltd (AB12CD34EF)".
+# Find it with: security find-identity -v -p codesigning
+DEV_ID         ?=
 
-## A drag-to-Applications disk image.
-dmg: 
-	@test -d $(APP) || { echo "No $(APP). Run 'make bundle' first."; exit 1; }
-	rm -rf build/dmg $(DMG)
-	mkdir -p build/dmg
-	cp -R $(APP) build/dmg/
-	ln -s /Applications build/dmg/Applications
-	hdiutil create -volname Nimbus -srcfolder build/dmg -ov -format UDZO $(DMG)
-	@shasum -a 256 $(DMG)
+## The whole distribution flow, in one command:
+##
+##   make dist DEV_ID="Developer ID Application: Acme Ltd (AB12CD34EF)"
+##
+## Apple is notarised rather than the app alone, and stapled, so the download
+## opens even on a Mac with no network connection.
+dist:
+	@test -n "$(DEV_ID)" || { echo "ERROR: set DEV_ID=\"Developer ID Application: NAME (TEAMID)\""; \
+		 echo "       Find it with: security find-identity -v -p codesigning"; exit 1; }
+	@xcrun notarytool history --keychain-profile $(NOTARY_PROFILE) >/dev/null 2>&1 || \
+		{ echo "ERROR: no notarisation credentials stored under profile '$(NOTARY_PROFILE)'."; \
+		  echo "       Run: xcrun notarytool store-credentials $(NOTARY_PROFILE) \\"; \
+		  echo "              --apple-id YOUR@EMAIL --team-id TEAMID --password APP-SPECIFIC-PASSWORD"; \
+		  exit 1; }
+	$(MAKE) bundle SIGN_IDENTITY="$(DEV_ID)" TIMESTAMP="--timestamp"
+	$(MAKE) dmg
+	codesign --force --timestamp --sign "$(DEV_ID)" $(DMG)
+	xcrun notarytool submit $(DMG) --keychain-profile $(NOTARY_PROFILE) --wait
+	xcrun stapler staple $(DMG)
+	xcrun stapler validate $(DMG)
+	@echo
+	@echo "Ready to upload: $(DMG)"
+	@echo "sha256 for the Homebrew cask:"
+	@shasum -a 256 $(DMG) | sed 's/^/  /'
 
 cert-info:
 	@security find-identity -v -p codesigning
