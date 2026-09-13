@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Nimbus — see which window has keyboard focus</title>
+<title>Nimbus: see which window has keyboard focus</title>
 <meta name="description" content="A macOS menu bar utility that draws an animated ring of light around the window with keyboard focus.">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<meta property="og:title" content="Nimbus — see which window has keyboard focus">
+<meta property="og:title" content="Nimbus: see which window has keyboard focus">
 <meta property="og:description" content="macOS hides which window has keyboard focus. Nimbus makes it obvious.">
 <meta property="og:image" content="icon.png">
 <meta name="twitter:card" content="summary_large_image">
@@ -32,19 +32,35 @@
   .tag { font-size: 19px; color: var(--dim); margin: 0 auto; max-width: 620px; }
   .stage {
     position: relative; border-radius: 14px; overflow: hidden;
+    /* Tapping the canvas otherwise starts a text selection, so the whole demo
+       flashes highlighted for a moment, exactly as if you had dragged across a
+       paragraph. Nothing here is text, so selection has nothing to offer.
+       tap-highlight removes the grey flash iOS paints over tapped elements, and
+       touch-action tells the browser this is not a double-tap-to-zoom target,
+       which also removes the 300ms click delay. */
+    user-select: none; -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
     border: 1px solid var(--line); background: #000; aspect-ratio: 5 / 2;
     box-shadow: 0 24px 60px rgba(0,0,0,.55);
   }
-  canvas { display: block; width: 100%; height: 100%; }
+  canvas {
+    display: block; width: 100%; height: 100%;
+    user-select: none; -webkit-user-select: none;
+    -webkit-touch-callout: none;   /* no press-and-hold "Save Image" sheet */
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
   /* Positioned by the renderer from the layout it actually draws, rather than
      from percentages that have to be kept in step with it by hand. */
   .screen-label {
-    position: absolute; font-size: 11px; letter-spacing: .10em;
+    position: absolute; font-size: 11px; user-select: none; -webkit-user-select: none; letter-spacing: .10em;
     text-transform: uppercase; color: rgba(255,255,255,.34);
     pointer-events: none; transform: translateX(-50%);
   }
   .callout {
-    position: absolute; left: 50%; top: 10px; transform: translateX(-50%);
+    position: absolute; left: 50%; top: 10px;
+    user-select: none; -webkit-user-select: none; transform: translateX(-50%);
     background: rgba(14,17,28,.82); border: 1px solid rgba(255,255,255,.14);
     color: #dfe3ef; font-size: 13px; padding: 8px 16px; border-radius: 999px;
     pointer-events: none; backdrop-filter: blur(8px);
@@ -69,6 +85,7 @@
   .swatches { display: grid; grid-template-columns: repeat(10, 1fr);
               gap: 8px; max-width: 420px; }
   .swatch {
+    touch-action: manipulation; -webkit-tap-highlight-color: transparent;
     aspect-ratio: 1; width: 100%; border-radius: 50%; cursor: pointer;
     border: 2px solid transparent; padding: 0;
     box-shadow: 0 2px 6px rgba(0,0,0,.5), inset 0 1px 1px rgba(255,255,255,.25);
@@ -77,6 +94,7 @@
   .swatch:hover { transform: translateY(-2px); }
   .swatch[aria-pressed="true"] { border-color: var(--text); }
   button.action {
+    touch-action: manipulation; -webkit-tap-highlight-color: transparent;
     background: linear-gradient(#232840, #1a1e30); color: var(--text);
     border: 1px solid #2e3350; border-radius: 9px; padding: 10px 16px;
     font-size: 14px; cursor: pointer; font-family: inherit;
@@ -202,9 +220,8 @@
       has focus.
     </p>
     <p class="tag why">
-      Built around a quirk of perception: <strong>your eye stops seeing what
-      never changes</strong>. So the ring never stops moving, and its color
-      rotates — <a href="#habituation">here is why</a>.
+      <strong>Nimbus leverages attention psychology.</strong> The colors rotate
+      to prevent habituation. Otherwise the ring would fade from your awareness.
     </p>
   </header>
 
@@ -265,7 +282,7 @@
       themselves stop responding to an unchanging stimulus
       <strong>sensory adaptation</strong>. Interface designers meet it as
       <em>banner blindness</em>: people stop seeing the thing in the same place,
-      in the same color, every day — even when they are looking for it.
+      in the same color, every day, even when they are looking for it.
     </p>
     <p>
       A static border around a window would work beautifully for a week and be
@@ -277,7 +294,7 @@
     <p class="note">
       Rotation above is sped up so you can see it. In the app it defaults to
       every 30 minutes, and is configurable from 10 minutes to never. It also
-      changes when you wake the machine — coming back to your desk is exactly
+      changes when you wake the machine. Coming back to your desk is exactly
       when noticing it matters most.
     </p>
   </section>
@@ -287,7 +304,7 @@
     <p>
       macOS marks the focused window with a slightly darker title bar. On one
       screen that's subtle. Across several it's invisible. So you come back to
-      your desk, start typing, press Enter — and it goes somewhere you didn't
+      your desk, start typing, press Enter, and it goes somewhere you didn't
       expect.
     </p>
     <p>
@@ -314,9 +331,9 @@
     <p class="note">
       Why Accessibility at all? It is the only supported way to find out which
       window has keyboard focus. The alternative,
-      <code>CGWindowListCopyWindowInfo</code>, can't report focus — only
-      stacking order — and is increasingly gated behind Screen Recording, which
-      is far more invasive.
+      <code>CGWindowListCopyWindowInfo</code>, can't report focus, only
+      stacking order, and it is increasingly gated behind Screen Recording,
+      which is far more invasive.
     </p>
   </section>
 
@@ -324,7 +341,7 @@
     <h2>About this demo</h2>
     <p class="note">
       The animation above is the real shader, ported from Metal to WebGL, drawing
-      a simulated desktop. It is representative rather than pixel-exact — the app
+      a simulated desktop. It is representative rather than pixel-exact. The app
       itself draws over your actual windows, and its ring is transparent in the
       middle so it never covers what you're working on.
     </p>
@@ -339,7 +356,7 @@
 </div>
 
 <script type="module">
-import { start } from "./ring.js?v=5";
+import { start } from "./ring.js?v=6";
 
 const canvas = document.getElementById("c");
 let app;
@@ -349,7 +366,7 @@ try {
 } catch (e) {
   document.querySelector(".stage").innerHTML =
     '<div style="padding:60px 24px;text-align:center;color:#969bb0">' +
-    'This demo needs WebGL. The app itself does not — it uses Metal.</div>';
+    'This demo needs WebGL. The app itself does not; it uses Metal.</div>';
 }
 
 if (app) {

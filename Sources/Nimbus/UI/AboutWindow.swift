@@ -60,7 +60,7 @@ final class AboutWindow: NSObject, NSWindowDelegate {
 
         let blurb = NSTextField(wrappingLabelWithString: """
             macOS tells you which window has keyboard focus with a slightly \
-            darker title bar. On a big screen, or several, that is invisible — \
+            darker title bar. On a big screen, or several, that is invisible, \
             so you start typing and it goes somewhere you did not expect.
 
             Nimbus draws a ring of light around the focused window, so you \
