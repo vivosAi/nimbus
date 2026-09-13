@@ -15,7 +15,7 @@ cask "nimbus" do
   desc "Draws an animated ring of light around the focused window"
   homepage "https://github.com/vivosAi/nimbus"
 
-  depends_on macos: ">= :ventura"
+  depends_on macos: :ventura
 
   app "Nimbus.app"
 
