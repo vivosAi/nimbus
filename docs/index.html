@@ -371,7 +371,7 @@
 </div>
 
 <script type="module">
-import { start } from "./ring.js?v=7";
+import { start } from "./ring.js?v=8";
 
 const canvas = document.getElementById("c");
 let app;
@@ -397,23 +397,36 @@ if (app) {
   canvas.addEventListener("click", () => callout.classList.add("gone"), { once: true });
 
   const swatches = document.getElementById("palette");
+  const activeLabel = document.getElementById("activeColor");
+  
+  // The palette also rotates on a timer, so selected state is derived from the
+  // app rather than tracked here. A local copy would drift the moment it fired.
+  function markSwatches() {
+    [...swatches.children].forEach((c, j) =>
+      c.setAttribute("aria-pressed", String(app.palette === j)));
+    activeLabel.textContent = app.PALETTES[app.palette].name;
+  }
+  
+  const hex = n => "#" + n.toString(16).padStart(6, "0");
   app.PALETTES.forEach((p, i) => {
+    const dot = document.createElement("span");
+    dot.className = "dot";
+    dot.style.background = `linear-gradient(135deg, ${hex(p.a)}, ${hex(p.b)})`;
+  
+    const name = document.createElement("span");
+    name.className = "name";
+    name.textContent = p.name;
+  
     const b = document.createElement("button");
     b.className = "swatch";
     b.type = "button";
-    b.title = p.name;
     b.setAttribute("aria-label", p.name);
-    b.setAttribute("aria-pressed", String(i === app.state.palette));
-    const hex = n => "#" + n.toString(16).padStart(6, "0");
-    b.style.background = `linear-gradient(135deg, ${hex(p.a)}, ${hex(p.b)})`;
-    b.onclick = () => {
-      app.setPalette(i);
-      [...swatches.children].forEach((c, j) =>
-        c.setAttribute("aria-pressed", String(i === j)));
-    };
+    b.append(dot, name);
+    b.onclick = () => { app.setPalette(i); markSwatches(); };
     swatches.appendChild(b);
   });
-
+  markSwatches();
+  
   const bind = (id, key, fn = Number) => {
     document.getElementById(id).addEventListener("input", e => {
       app.state[key] = fn(e.target.value);
@@ -423,26 +436,17 @@ if (app) {
   bind("width", "bandOuter");
   bind("speed", "flowSpeed");
   bind("turb", "noiseScale");
-
-  const activeLabel = document.getElementById("activeColor");
-  const markSwatches = () => {
-    [...swatches.children].forEach((c, j) =>
-      c.setAttribute("aria-pressed", String(app.palette === j)));
-    activeLabel.textContent = app.PALETTES[app.palette].name;
-  };
-  markSwatches();
-
+  
   document.getElementById("next").onclick = () => { app.nextPalette(); markSwatches(); };
-
+  
   const rotate = document.getElementById("rotate");
   rotate.onclick = () => {
     app.state.rotate = !app.state.rotate;
     rotate.textContent = "Rotating: " + (app.state.rotate ? "on" : "off");
     rotate.setAttribute("aria-pressed", String(app.state.rotate));
   };
-
-  // The palette rotates on its own, so keep the swatches honest about which one
-  // is actually showing.
+  
+  // Keep the swatches honest when the timer changes the palette on its own.
   setInterval(markSwatches, 500);
 }
 </script>
