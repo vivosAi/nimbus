@@ -12,13 +12,9 @@ Nimbus draws a ring of light around the window that currently has keyboard
 focus. It moves constantly, so your eye keeps registering it, and it pulses
 brighter for a moment whenever focus changes.
 
-![The ring around a focused window](docs/screenshot.png)
 
-<!-- VIDEO GOES HERE.
-     Edit this file on github.com and drag docs/demo.mp4 into the editor at this
-     spot. GitHub uploads it to its own asset host and inserts a URL that plays
-     inline. A <video> tag pointing at a file in this repository does not work:
-     GitHub's markdown renderer strips it. Delete this comment afterwards. -->
+https://github.com/user-attachments/assets/74b72bea-89f5-4a83-9926-4e3b60411ecb
+
 
 **[Try it in your browser](https://vivosai.github.io/nimbus/)**. A live
 simulation of two displays, no install and no permissions needed.
