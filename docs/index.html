@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Nimbus — see which window has keyboard focus</title>
 <meta name="description" content="A macOS menu bar utility that draws an animated ring of light around the window with keyboard focus.">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta property="og:title" content="Nimbus — see which window has keyboard focus">
+<meta property="og:description" content="macOS hides which window has keyboard focus. Nimbus makes it obvious.">
+<meta property="og:image" content="icon.png">
+<meta name="twitter:card" content="summary_large_image">
 <style>
   :root {
     --bg: #0a0b12; --panel: #12141f; --line: #232637;
@@ -18,17 +25,34 @@
   }
   .wrap { max-width: 940px; margin: 0 auto; padding: 56px 24px 80px; }
   header { text-align: center; margin-bottom: 40px; }
-  h1 { font-size: 44px; margin: 0 0 12px; letter-spacing: -0.02em; font-weight: 650; }
+  .brand { display: flex; align-items: center; justify-content: center; gap: 16px;
+           margin-bottom: 16px; }
+  .brand img { width: 76px; height: 76px; border-radius: 17px; display: block; }
+  h1 { font-size: 46px; margin: 0; letter-spacing: -0.025em; font-weight: 650; }
   .tag { font-size: 19px; color: var(--dim); margin: 0 auto; max-width: 620px; }
   .stage {
     position: relative; border-radius: 14px; overflow: hidden;
     border: 1px solid var(--line); background: #000; aspect-ratio: 16 / 10;
   }
   canvas { display: block; width: 100%; height: 100%; }
-  .hint {
-    position: absolute; left: 14px; bottom: 12px; font-size: 12px;
-    color: rgba(255,255,255,.45); pointer-events: none;
+  /* Screen labels, positioned to match the layout the shader draws. The two
+     displays occupy 1.2%-48.7% and 51.3%-98.8% horizontally, and 26.25%-73.75%
+     vertically, which is where these percentages come from. */
+  .screen-label {
+    position: absolute; top: 75.5%; font-size: 11px; letter-spacing: .10em;
+    text-transform: uppercase; color: rgba(255,255,255,.34);
+    pointer-events: none; transform: translateX(-50%);
   }
+  .screen-label.one { left: 25%; }
+  .screen-label.two { left: 75%; }
+  .callout {
+    position: absolute; left: 50%; top: 5.5%; transform: translateX(-50%);
+    background: rgba(14,17,28,.82); border: 1px solid rgba(255,255,255,.14);
+    color: #dfe3ef; font-size: 13px; padding: 8px 16px; border-radius: 999px;
+    pointer-events: none; backdrop-filter: blur(8px);
+    transition: opacity .5s ease; white-space: nowrap;
+  }
+  .callout.gone { opacity: 0; }
   .controls {
     display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
     gap: 18px 26px; margin-top: 22px; padding: 20px 22px;
@@ -77,7 +101,10 @@
 <div class="wrap">
 
   <header>
-    <h1>Nimbus</h1>
+    <div class="brand">
+      <img src="icon.png" alt="" width="76" height="76">
+      <h1>Nimbus</h1>
+    </div>
     <p class="tag">
       You can always see where your pointer is. You can't see where your
       <em>keyboard</em> is. Nimbus draws a ring of light around the window that
@@ -87,7 +114,9 @@
 
   <div class="stage">
     <canvas id="c"></canvas>
-    <div class="hint">Live simulation — focus switches every few seconds</div>
+    <div class="callout" id="callout">Click any window to give it keyboard focus</div>
+    <div class="screen-label one">Screen 1</div>
+    <div class="screen-label two">Screen 2</div>
   </div>
 
   <div class="controls">
@@ -112,10 +141,10 @@
       <input type="range" id="turb" min="1.5" max="8" step="0.1" value="4">
     </div>
     <div>
-      <label>Try it</label>
+      <label>Colour rotation</label>
       <div class="row">
-        <button class="action" id="switch">Switch window</button>
-        <button class="action" id="auto" aria-pressed="true">Auto: on</button>
+        <button class="action" id="rotate" aria-pressed="true">Rotating: on</button>
+        <button class="action" id="next">Next colour</button>
       </div>
     </div>
   </div>
@@ -128,6 +157,31 @@
       macOS 13+ · Apple Silicon and Intel
     </div>
   </div>
+
+  <section>
+    <h2>Why the colour keeps changing</h2>
+    <p>
+      Anything constant fades from awareness. Psychologists call the general
+      effect <strong>habituation</strong>, and the version where your receptors
+      themselves stop responding to an unchanging stimulus
+      <strong>sensory adaptation</strong>. Interface designers meet it as
+      <em>banner blindness</em>: people stop seeing the thing in the same place,
+      in the same colour, every day — even when they are looking for it.
+    </p>
+    <p>
+      A static border around a window would work beautifully for a week and be
+      invisible by the end of the month. So Nimbus does two things about it. The
+      ring never stops moving, because the eye is far better at detecting change
+      than steady state. And the colour scheme rotates, so no single look ever
+      becomes the background you have learned to ignore.
+    </p>
+    <p class="note">
+      Rotation above is sped up so you can see it. In the app it defaults to
+      every 30 minutes, and is configurable from 10 minutes to never. It also
+      changes when you wake the machine — coming back to your desk is exactly
+      when noticing it matters most.
+    </p>
+  </section>
 
   <section>
     <h2>What it's for</h2>
@@ -196,6 +250,11 @@ try {
 }
 
 if (app) {
+  // The instruction has done its job once they have clicked; leave it after
+  // that and it is just clutter over the thing they came to look at.
+  const callout = document.getElementById("callout");
+  canvas.addEventListener("click", () => callout.classList.add("gone"), { once: true });
+
   const swatches = document.getElementById("palette");
   app.PALETTES.forEach((p, i) => {
     const b = document.createElement("button");
@@ -207,8 +266,7 @@ if (app) {
     const hex = n => "#" + n.toString(16).padStart(6, "0");
     b.style.background = `linear-gradient(135deg, ${hex(p.a)}, ${hex(p.b)})`;
     b.onclick = () => {
-      app.state.palette = i;
-      app.flare();
+      app.setPalette(i);
       [...swatches.children].forEach((c, j) =>
         c.setAttribute("aria-pressed", String(i === j)));
     };
@@ -225,13 +283,21 @@ if (app) {
   bind("speed", "flowSpeed");
   bind("turb", "noiseScale");
 
-  document.getElementById("switch").onclick = () => app.switchFocus();
-  const auto = document.getElementById("auto");
-  auto.onclick = () => {
-    app.state.autoSwitch = !app.state.autoSwitch;
-    auto.textContent = "Auto: " + (app.state.autoSwitch ? "on" : "off");
-    auto.setAttribute("aria-pressed", String(app.state.autoSwitch));
+  const markSwatches = () => [...swatches.children].forEach((c, j) =>
+    c.setAttribute("aria-pressed", String(app.palette === j)));
+
+  document.getElementById("next").onclick = () => { app.nextPalette(); markSwatches(); };
+
+  const rotate = document.getElementById("rotate");
+  rotate.onclick = () => {
+    app.state.rotate = !app.state.rotate;
+    rotate.textContent = "Rotating: " + (app.state.rotate ? "on" : "off");
+    rotate.setAttribute("aria-pressed", String(app.state.rotate));
   };
+
+  // The palette rotates on its own, so keep the swatches honest about which one
+  // is actually showing.
+  setInterval(markSwatches, 500);
 }
 </script>
 </body>

@@ -138,19 +138,19 @@ Gatekeeper, so there is no unsigned distribution path.
 
 ## Known limitations
 
-**Not yet verified on Retina displays.** The 2x rendering path, and the scale
-change when a window moves between displays of different densities, are
-implemented but have not been confirmed on hardware.
+**Retina rendering is only lightly tested.** It has been confirmed working on
+one Retina display. What has had the least coverage is the transition when a
+window moves between displays with *different* scale factors, where the Metal
+layer's `contentsScale` has to change mid-flight.
 
-This is called out because of how that code fails when it is wrong: a
+That path is worth a bug report because of how it fails when it is wrong: a
 `CAMetalLayer` with an incorrect `contentsScale` renders every frame correctly,
 presents without error, and composites to nothing at all. The ring is simply
 invisible and nothing anywhere reports a problem.
 
-If the ring looks blurry, is the wrong size, or does not appear on a Retina
-display, a bug report is welcome. `/tmp/nimbus.log` records a line reading
-`backing scale -> 2.0` when a 2x display is detected; please include it, or say
-if it is missing.
+If the ring looks blurry, is the wrong size, or disappears after moving a window
+between screens, please open an issue. `/tmp/nimbus.log` records a line reading
+`backing scale -> 2.0` when a 2x display is detected; including it helps.
 
 **Mission Control** shows a stale ring. The overlay is a separate window and is
 not scaled into the Mission Control grid with everything else, so it stays where
