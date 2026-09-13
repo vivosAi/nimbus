@@ -8,7 +8,7 @@
 # version, sha256 (printed by `make dmg`) and the release URL.
 cask "nimbus" do
   version "0.1.0"
-  sha256 "7fd9c10d360c2431cb3b966d18deb4c5d178229de38bd0e2390014b017c72d6e"
+  sha256 "f88352d8387bd981929cce801c59bebea05a0454cb0cabebadeb5e5f49d6e5e2"
 
   url "https://github.com/vivosAi/nimbus/releases/download/v#{version}/Nimbus.dmg"
   name "Nimbus"
