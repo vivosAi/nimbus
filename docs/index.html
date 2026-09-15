@@ -164,21 +164,37 @@
      pulsing button. The glow stays; only the movement stops. */
   @media (prefers-reduced-motion: reduce) {
     .cta .download::before { animation: none; opacity: .8; }
+    .cta .secondary::before { animation: none; opacity: .6; }
   }
   .cta .sub { color: var(--dim); font-size: 13px; margin-top: 14px; }
   .cta .sub a { color: var(--dim); text-decoration: underline;
                 text-underline-offset: 3px; }
   .cta .sub a:hover { color: var(--text); }
-  /* Secondary platform link: same shape as the macOS button, none of its glow.
-     This is the second-choice action on the page, not a second hero. */
+  /* The other platform. It wears a ring too — both are shipped products, and
+     two rings in different palettes say "one thing, two platforms" better than
+     a glow and a plain box would. Hierarchy comes from the fill instead: the
+     macOS button is solid accent, this one sits on the panel colour. */
   .cta .secondary {
-    display: inline-block; margin-left: 12px;
+    position: relative; z-index: 1;
+    display: inline-block; margin-left: 20px;
     background: var(--panel); color: var(--text);
     text-decoration: none; font-weight: 600; padding: 13px 24px;
     border-radius: 10px; font-size: 15px; border: 1px solid var(--line);
     transition: transform .12s ease, border-color .12s ease;
   }
+  /* Aurora, from the app's own palette list — green through teal to blue.
+     Deliberately not Plasma: at a glance the two buttons should not be the
+     same colour, and Aurora reads as a set with it rather than a clash. */
+  .cta .secondary::before {
+    content: ""; position: absolute; inset: -7px; z-index: -1;
+    border-radius: 16px;
+    background: linear-gradient(90deg, #00E676, #1DE9B6, #00B0FF, #1DE9B6, #00E676);
+    background-size: 300% 100%;
+    filter: blur(15px); opacity: .5;
+    animation: ring-drift 9s linear infinite, ring-breathe 4.1s ease-in-out infinite;
+  }
   .cta .secondary:hover { transform: translateY(-2px); border-color: var(--accent); }
+  .cta .secondary:hover::before { opacity: .8; filter: blur(20px); }
   @media (max-width: 480px) {
     .cta .secondary { display: block; margin: 14px auto 0; max-width: 260px; }
   }
@@ -316,9 +332,11 @@
     <a class="download" href="https://github.com/vivosAi/nimbus/releases/latest/download/Nimbus.dmg">Download for macOS</a>
     <a class="secondary" href="#linux">Download for Linux</a>
     <div class="sub">
-      Free and open source ·
-      <a href="https://github.com/vivosAi/nimbus">Source on GitHub</a> ·
-      macOS 13+ · Apple Silicon and Intel
+      Free and open source · macOS 13+, Apple Silicon and Intel ·
+      Linux on Hyprland 0.50+<br>
+      Source on GitHub:
+      <a href="https://github.com/vivosAi/nimbus">macOS</a> ·
+      <a href="https://github.com/vivosAi/nimbus-wayland">Linux</a>
     </div>
   </div>
 
@@ -401,9 +419,8 @@
       fast path and the installer will defer to it automatically.
     </p>
     <p class="note">
-      There's no screenshot here yet; the project is younger than the macOS
-      one. <a href="https://github.com/vivosAi/nimbus-wayland">Source and
-      details on GitHub</a>.
+      <a href="https://github.com/vivosAi/nimbus-wayland">See it running</a>,
+      and read the rest, on GitHub.
     </p>
   </section>
 
