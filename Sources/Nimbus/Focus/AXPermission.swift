@@ -3,7 +3,7 @@ import ApplicationServices
 
 /// The app does nothing without Accessibility permission, so this watches the
 /// grant rather than checking once at launch: tick the checkbox in System
-/// Settings and Nimbus starts working within a second, no restart (§6.1).
+/// Settings and Nimbus starts working within a second, no restart.
 final class AXPermission {
 
     /// Fires on the main queue whenever the trust state changes, including the
@@ -13,7 +13,7 @@ final class AXPermission {
     private(set) var isTrusted: Bool = false
     private var timer: Timer?
 
-    /// Poll interval. §6.1 requires the grant to be noticed within 1s.
+    /// Poll interval. The grant must be noticed within a second.
     private let pollInterval: TimeInterval = 1.0
 
     static var currentlyTrusted: Bool {

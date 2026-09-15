@@ -14,7 +14,7 @@ final class OverlayController {
 
     private let metalView: MTKView?
     private let renderer: RingRenderer?
-    /// §15's fallback when Metal cannot start, and — while `debugMode` is on —
+    /// The fallback when Metal cannot start, and — while `debugMode` is on —
     /// a control drawn *over* the Metal view. If the stroke appears and the
     /// Metal output does not, the overlay window is fine and the fault is in
     /// Metal presentation, not in window setup.
@@ -25,7 +25,7 @@ final class OverlayController {
     private var lastState: FocusState?
 
     /// While the focused window is being dragged or resized the ring stands
-    /// down (§6.5, amended). The last state is kept so it can be restored at
+    /// down. The last state is kept so it can be restored at
     /// the window's new resting position without waiting for a focus event.
     private var isSuppressedByMotion = false
 
@@ -416,7 +416,7 @@ final class OverlayController {
     private func shouldShow(_ state: FocusState) -> Bool {
         guard prefs.enabled else { return false }
 
-        // Never ring ourselves (§10) — the prefs window taking focus should not
+        // Never ring ourselves — the prefs window taking focus should not
         // produce a ring around it.
         if state.pid == ProcessInfo.processInfo.processIdentifier { return false }
 
@@ -432,7 +432,7 @@ final class OverlayController {
     /// Keep the Metal layer's `contentsScale` in step with whichever display the
     /// overlay is currently on.
     ///
-    /// This is not just the mixed-scale requirement from §10 — it is load
+    /// This is not just about mixed-scale displays — it is load
     /// bearing. A `CAMetalLayer` whose `contentsScale` is 0 renders correctly
     /// and composites to nothing at all: the draw loop runs, the drawable is
     /// presented, no error is reported anywhere, and the screen stays empty.

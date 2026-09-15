@@ -78,7 +78,7 @@ final class RingRenderer: NSObject, MTKViewDelegate {
 
         guard let attachment = descriptor.colorAttachments[0] else { return nil }
         attachment.pixelFormat = view.colorPixelFormat
-        // Premultiplied alpha, matching the shader's output (§8.3).
+        // Premultiplied alpha, matching the shader's output.
         attachment.isBlendingEnabled = true
         attachment.rgbBlendOperation = .add
         attachment.alphaBlendOperation = .add
@@ -147,7 +147,7 @@ final class RingRenderer: NSObject, MTKViewDelegate {
         let bandScale = animator.bandScale(at: now)
 
         uniforms.cornerRadius = Float(cornerRadiusPoints) * scale
-        // Feather both edges by at least 1.5px or the ring aliases badly (§8.3).
+        // Feather both edges by at least 1.5px or the ring aliases badly.
         uniforms.bandInner = max(Float(bandInnerPoints) * scale, 1.5)
         // The band visibly swells at the peak of a flare and relaxes back.
         uniforms.bandOuter = max(Float(bandOuterPoints) * scale * bandScale, 1.5)
@@ -185,7 +185,8 @@ final class RingRenderer: NSObject, MTKViewDelegate {
             Log.write("frame rate -> \(wanted)")
         }
         // Slow enough that the movement reads as drifting rather than
-        // flickering — §8.3's photosensitivity constraint. The structure comes
+        // flickering, which is a photosensitivity constraint and not a taste
+            // one. The structure comes
         // from the turbulence, not from speed.
         // Features per turn around the ring. At 2.5 there were only two or
         // three, which read as a single bright dot orbiting the window.

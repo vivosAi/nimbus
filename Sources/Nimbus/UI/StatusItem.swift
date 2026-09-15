@@ -2,7 +2,7 @@ import AppKit
 import ServiceManagement
 import NimbusKit
 
-/// The menu bar icon and its menu (§9).
+/// The menu bar icon and its menu.
 ///
 /// Every visual property of the ring is adjustable here. "Unmissable" is
 /// genuinely personal — what reads as a helpful marker to one person reads as a
@@ -195,7 +195,7 @@ final class StatusItem: NSObject, NSMenuDelegate {
         return menu
     }
 
-    /// Which palettes the timer is allowed to choose from (§8.5). Separate from
+    /// Which palettes the timer is allowed to choose from. Separate from
     /// picking one now, because wanting to see a color is not the same as
     /// wanting it to keep coming back.
     private func rotationMembershipMenu() -> NSMenu {

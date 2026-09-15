@@ -2,7 +2,7 @@ import Foundation
 import CoreGraphics
 
 /// Typed accessors over `UserDefaults`, suite `io.github.vivosai.nimbus`.
-/// Every setting the menu (§9) exposes lives here with its default.
+/// Every setting the menu exposes lives here with its default.
 public final class Preferences {
 
     public static let suiteName = "io.github.vivosai.nimbus"
@@ -76,7 +76,7 @@ public final class Preferences {
     public enum BandWidth: String, CaseIterable {
         case thin, normal, thick
 
-        /// (inside the window edge, outside it), in points. §7.
+        /// (inside the window edge, outside it), in points.
         public var points: (inner: CGFloat, outer: CGFloat) {
             switch self {
             case .thin:   return (4, 12)
@@ -87,7 +87,7 @@ public final class Preferences {
     }
 
     /// How fast the light travels around the ring. Kept well under any rate
-    /// that could read as flicker — §8.3's photosensitivity constraint is a
+    /// that could read as flicker: photosensitivity is a
     /// hard floor, not a preference.
     public enum MotionSpeed: String, CaseIterable {
         case calm, normal, lively
@@ -159,8 +159,8 @@ public final class Preferences {
         set { defaults.set(newValue, forKey: Key.enabled) }
     }
 
-    /// Baseline brightness once the flare has settled. Subtle/Normal/Loud in §9
-    /// map to 0.18 / 0.30 / 0.50.
+    /// Baseline brightness once the flare has settled. Subtle/Normal/Loud in the
+    /// menu map to 0.18 / 0.30 / 0.50.
     public var idleIntensity: Double {
         get { defaults.double(forKey: Key.idleIntensity) }
         set { defaults.set(newValue, forKey: Key.idleIntensity) }
@@ -205,7 +205,7 @@ public final class Preferences {
         set { defaults.set(newValue, forKey: Key.paletteInterval) }
     }
 
-    /// Persisted so a restart resumes the rotation rather than resetting it (§8.5).
+    /// Persisted so a restart resumes the rotation rather than resetting it.
     public var paletteIndex: Int {
         get { defaults.integer(forKey: Key.paletteIndex) }
         set { defaults.set(newValue, forKey: Key.paletteIndex) }
@@ -228,7 +228,7 @@ public final class Preferences {
     }
 
     /// Bundle IDs that never get a ring. The escape hatch for apps that
-    /// misreport their geometry (§10) — we do not special-case them in code.
+    /// misreport their geometry — we do not special-case them in code.
     public var exclusions: Set<String> {
         get { Set(defaults.array(forKey: Key.exclusions) as? [String] ?? []) }
         set { defaults.set(Array(newValue), forKey: Key.exclusions) }
@@ -266,7 +266,7 @@ public final class Preferences {
 
     /// Hide the ring while a window is being dragged or resized.
     ///
-    /// The spec (§6.5) instead polls AX at 60 Hz during a drag to stop the ring
+    /// The alternative is polling AX at 60 Hz during a drag to stop the ring
     /// trailing the window. Hiding is both cheaper and more useful: while you
     /// are dragging a window you already know which one is active, so the ring
     /// has nothing to tell you, and the whole class of lag disappears with it.
@@ -275,7 +275,7 @@ public final class Preferences {
         set { defaults.set(newValue, forKey: Key.hideWhileDragging) }
     }
 
-    /// How far the overlay window is outset beyond the tracked window (§7).
+    /// How far the overlay window is outset beyond the tracked window.
     public var margin: CGFloat {
         get { CGFloat(defaults.double(forKey: Key.margin)) }
         set { defaults.set(Double(newValue), forKey: Key.margin) }

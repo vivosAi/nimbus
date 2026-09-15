@@ -1,6 +1,6 @@
 import Foundation
 
-/// The flare-and-settle curve (§8.4).
+/// The flare-and-settle curve.
 ///
 /// The eye detects change far better than steady state, so a focus change gets
 /// a bright pulse that relaxes into a calm baseline. Kept pure — time is passed
@@ -41,7 +41,7 @@ public final class Animator {
         idleIntensity + (1.0 - idleIntensity) * flareProgress(at: now)
     }
 
-    /// The band visibly swells on a flare and relaxes back (§8.4).
+    /// The band visibly swells on a flare and relaxes back.
     public func bandScale(at now: TimeInterval) -> Float {
         1.0 + 0.6 * flareProgress(at: now)
     }

@@ -233,8 +233,7 @@ turbulence itself is nearly free.
 
 ## Design notes
 
-The implementation follows `focusring-spec.md`, the original brief. It differs
-from it in a few places, each for a reason:
+A few decisions that are not obvious from the code, each for a reason:
 
 - **The ring hides while you drag**, instead of chasing the window with 60 Hz
   Accessibility polling. Those notifications are coalesced and lag anyway, and

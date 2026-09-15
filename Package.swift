@@ -11,7 +11,7 @@ let package = Package(
             name: "NimbusKit",
             path: "Sources/NimbusKit"
         ),
-        // AppKit/Metal shell. Not unit-tested; verified by hand per milestone.
+        // AppKit/Metal shell. Not unit-tested; verified by hand.
         .executableTarget(
             name: "Nimbus",
             dependencies: ["NimbusKit"],

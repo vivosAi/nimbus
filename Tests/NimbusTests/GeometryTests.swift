@@ -2,8 +2,8 @@ import XCTest
 import CoreGraphics
 @testable import NimbusKit
 
-/// §6.4 calls coordinate conversion "the single most common source of bugs in
-/// this kind of app", and the cases that break naive implementations — a display
+/// Coordinate conversion is the single most common source of bugs in this kind
+/// of app, and the cases that break naive implementations — a display
 /// above or to the left of the primary — are tedious to reproduce by hand.
 /// They are trivial here.
 final class GeometryTests: XCTestCase {
@@ -58,7 +58,7 @@ final class GeometryTests: XCTestCase {
         XCTAssertEqual(back, ax)
     }
 
-    // MARK: - Sanity filtering (§10)
+    // MARK: - Sanity filtering
 
     func testRejectsDegenerateAndAbsurdFrames() {
         XCTAssertFalse(Geometry.isSensible(.zero))
@@ -92,7 +92,7 @@ final class GeometryTests: XCTestCase {
         XCTAssertEqual(overlay, CGRect(x: 0, y: 0, width: 824, height: 624))
     }
 
-    // MARK: - Band clamping (§10)
+    // MARK: - Band clamping
 
     func testBandClampsOnWindowsSmallerThanTheBand() {
         let tiny = CGRect(x: 0, y: 0, width: 60, height: 60)

@@ -31,7 +31,7 @@ public enum Geometry {
     }
 
     /// Frames this absurd are always a misreporting app, never a real window.
-    /// §10: reject and hide rather than drawing a ring around nonsense.
+    /// Reject and hide rather than drawing a ring around nonsense.
     public static let minSensibleSide: CGFloat = 40
     public static let maxSensibleSide: CGFloat = 20_000
 
@@ -51,7 +51,7 @@ public enum Geometry {
         return outset.intersection(screenUnion)
     }
 
-    /// Band widths must not swallow a small window whole (§10).
+    /// Band widths must not swallow a small window whole.
     public static func clampedBand(inner: CGFloat,
                                    outer: CGFloat,
                                    window: CGRect) -> (inner: CGFloat, outer: CGFloat) {

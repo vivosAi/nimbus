@@ -169,7 +169,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let center = NSWorkspace.shared.notificationCenter
         // Waking and unlocking are both "the user has just come back", which is
         // exactly when the ring is most worth noticing — and the best moment for
-        // a new color, since novelty is most useful on return (§8.5).
+        // a new color, since novelty is most useful on return.
         center.addObserver(self, selector: #selector(userReturned),
                            name: NSWorkspace.didWakeNotification, object: nil)
         center.addObserver(self, selector: #selector(userReturned),
@@ -224,7 +224,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         Log.write("palette -> \(palette.name) (chosen)")
     }
 
-    /// Persisted so a restart resumes the cycle rather than resetting it (§8.5).
+    /// Persisted so a restart resumes the cycle rather than resetting it.
     private func persistPaletteState() {
         guard let overlay else { return }
         prefs.paletteIndex = overlay.paletteIndex

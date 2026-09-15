@@ -9,7 +9,7 @@ import CoreGraphics
 /// the queue discipline is what actually keeps the UI alive.
 enum AX {
 
-    /// §6.5. Applied to every element we create, windows included — not just app
+    /// Applied to every element we create, windows included — not just app
     /// elements — because a stalled *window* read is exactly what strands the
     /// ring in the wrong place.
     static let messagingTimeout: Float = 0.25
@@ -69,7 +69,7 @@ enum AX {
     }
 
     /// Sheets and popovers must not steal the ring from the window they belong
-    /// to (§6.2), so walk up to the owning window.
+    /// to, so walk up to the owning window.
     static func resolveToWindow(_ element: AXUIElement, maxDepth: Int = 6) -> AXUIElement? {
         var current = element
         for _ in 0..<maxDepth {

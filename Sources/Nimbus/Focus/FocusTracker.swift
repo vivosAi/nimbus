@@ -44,7 +44,7 @@ final class FocusTracker {
     private var resyncTimer: Timer?
     private let resyncInterval: TimeInterval = 2.0
 
-    // Motion mode (§6.5)
+    // Motion mode
     private var motionTimer: Timer?
     private var lastMotionAt: Date?
     private var consecutiveReadFailures = 0
@@ -168,7 +168,7 @@ final class FocusTracker {
 
         detachObserver()
 
-        // Never ring ourselves (§10).
+        // Never ring ourselves.
         guard pid != ProcessInfo.processInfo.processIdentifier else {
             publish(nil)
             return
@@ -293,7 +293,7 @@ final class FocusTracker {
         }
     }
 
-    // MARK: - Motion mode (§6.5)
+    // MARK: - Motion mode
 
     /// A drag or resize started. Rather than chasing the window with 60 Hz AX
     /// reads — which lag anyway, because the notifications are coalesced — the
@@ -349,7 +349,7 @@ final class FocusTracker {
                 return
             }
 
-            // §6.2: ignore non-standard windows unless they have a sane size —
+            // Ignore non-standard windows unless they have a sane size —
             // panels and pickers otherwise pull the ring off the real window.
             let subrole = AX.string(window, kAXSubroleAttribute as String)
             let isStandard = subrole == (kAXStandardWindowSubrole as String)
@@ -392,7 +392,7 @@ final class FocusTracker {
     private func readFailed(reason: String?) {
         DispatchQueue.main.async {
             self.consecutiveReadFailures += 1
-            // §6.5: two failures in a row means hide, rather than leaving the
+            // Two failures in a row means hide, rather than leaving the
             // ring stranded around where the window used to be.
             if self.consecutiveReadFailures >= 2 {
                 self.exitMotionMode()

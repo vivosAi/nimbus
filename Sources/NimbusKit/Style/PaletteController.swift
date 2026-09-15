@@ -1,7 +1,7 @@
 import Foundation
 import simd
 
-/// Rotates the color scheme over time and cross-fades between schemes (§8.5).
+/// Rotates the color scheme over time and cross-fades between schemes.
 ///
 /// Rotation exists to stop the ring becoming invisible through familiarity, so
 /// the selection deliberately avoids repeating recent palettes, and transitions
