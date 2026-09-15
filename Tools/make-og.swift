@@ -2,10 +2,15 @@
 // handing them the square app icon instead gets it letterboxed or cut.
 //
 //   swift Tools/make-og.swift docs/og.png
+//   swift Tools/make-og.swift /tmp/og-wayland.png wayland
+//
+// The Wayland variant is the same card for the other repository, which has no
+// page of its own to generate one from. Same icon on purpose: one product.
 
 import AppKit
 
 let out = CommandLine.arguments.count > 1 ? CommandLine.arguments[1] : "docs/og.png"
+let variant = CommandLine.arguments.count > 2 ? CommandLine.arguments[2] : "mac"
 let W: CGFloat = 1200, H: CGFloat = 630
 
 func srgb(_ hex: UInt32, _ a: CGFloat = 1) -> NSColor {
@@ -58,7 +63,12 @@ let subAttrs: [NSAttributedString.Key: Any] = [
     .paragraphStyle: body,
 ]
 let sub = NSAttributedString(
-    string: "macOS hides which window has keyboard focus.\nNimbus makes it obvious.",
+    // Not "Hyprland hides which window has focus" — it draws an active border,
+    // and this audience knows it. The argument is habituation: a static border
+    // stops registering, which is the whole reason the ring moves.
+    string: variant == "wayland"
+        ? "A static border fades from awareness.\nNimbus makes keyboard focus obvious."
+        : "macOS hides which window has keyboard focus.\nNimbus makes it obvious.",
     attributes: subAttrs)
 let subWidth: CGFloat = W - textLeft - 44
 let subHeight = ceil(sub.boundingRect(
@@ -72,7 +82,9 @@ srgb(0xFFFFFF, 0.11).setFill()
 NSBezierPath(rect: CGRect(x: textLeft + 4, y: 206, width: 500, height: 1)).fill()
 
 let footer = NSAttributedString(
-    string: "Free and open source   ·   Apple Silicon and Intel   ·   macOS 13+",
+    string: variant == "wayland"
+        ? "Free and open source   ·   wlr-layer-shell   ·   Hyprland 0.50+"
+        : "Free and open source   ·   Apple Silicon and Intel   ·   macOS 13+",
     attributes: [
         .font: NSFont.systemFont(ofSize: 23, weight: .medium),
         .foregroundColor: srgb(0x7C8298),
