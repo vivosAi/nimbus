@@ -31,7 +31,10 @@ let (subtitle, footerText): (String, String) = {
         return ("macOS hides which window has keyboard focus.\nNimbus makes it obvious.",
                 "Free and open source   ·   Apple Silicon and Intel   ·   macOS 13+")
     default:
-        return ("You cannot see which window has keyboard focus.\nNimbus makes it obvious.",
+        // Names the loss before the fix. "Wrong session" rather than "wrong
+        // window" because that is the version of this people meet daily now,
+        // with several agents and terminals open at once.
+        return ("Sent the prompt to the wrong session?\nNimbus glows around whatever has focus.",
                 "Free and open source   ·   macOS 13+   ·   Hyprland 0.50+")
     }
 }()
