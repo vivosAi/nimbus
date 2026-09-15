@@ -1,5 +1,9 @@
 # Nimbus
 
+The macOS version of Nimbus. There's also
+[Nimbus for Wayland](https://github.com/vivosAi/nimbus-wayland), for Hyprland
+on Linux.
+
 **macOS hides which window has keyboard focus. Nimbus makes it obvious.**
 
 You can always see where your pointer is. You cannot see where your *keyboard*

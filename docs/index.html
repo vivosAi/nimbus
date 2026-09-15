@@ -169,6 +169,27 @@
   .cta .sub a { color: var(--dim); text-decoration: underline;
                 text-underline-offset: 3px; }
   .cta .sub a:hover { color: var(--text); }
+  /* Secondary platform link: same shape as the macOS button, none of its glow.
+     This is the second-choice action on the page, not a second hero. */
+  .cta .secondary {
+    display: inline-block; margin-left: 12px;
+    background: var(--panel); color: var(--text);
+    text-decoration: none; font-weight: 600; padding: 13px 24px;
+    border-radius: 10px; font-size: 15px; border: 1px solid var(--line);
+    transition: transform .12s ease, border-color .12s ease;
+  }
+  .cta .secondary:hover { transform: translateY(-2px); border-color: var(--accent); }
+  @media (max-width: 480px) {
+    .cta .secondary { display: block; margin: 14px auto 0; max-width: 260px; }
+  }
+  .codeblock {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 16px; margin: 14px 0; overflow-x: auto;
+  }
+  .codeblock code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 13px; color: var(--text); white-space: pre;
+  }
   section { margin-top: 52px; }
   h2 { font-size: 21px; margin: 0 0 12px; letter-spacing: -0.01em; }
   p { color: #c3c8d8; }
@@ -293,6 +314,7 @@
 
   <div class="cta">
     <a class="download" href="https://github.com/vivosAi/nimbus/releases/latest/download/Nimbus.dmg">Download for macOS</a>
+    <a class="secondary" href="#linux">Download for Linux</a>
     <div class="sub">
       Free and open source ·
       <a href="https://github.com/vivosAi/nimbus">Source on GitHub</a> ·
@@ -360,6 +382,25 @@
       <code>CGWindowListCopyWindowInfo</code>, can't report focus, only
       stacking order, and it is increasingly gated behind Screen Recording,
       which is far more invasive.
+    </p>
+  </section>
+
+  <section id="linux">
+    <h2>Nimbus for Linux</h2>
+    <p>
+      The same shader, ported from Metal to GLSL, drawn on a
+      <code>wlr-layer-shell</code> surface. Runs on Hyprland today; Sway and
+      Niri need a focus backend adding.
+    </p>
+    <div class="codeblock"><code>curl -fsSL https://raw.githubusercontent.com/vivosAi/nimbus-wayland/main/packaging/install.sh | bash</code></div>
+    <p class="note">
+      On Arch, <code>yay -S nimbus-wayland-bin</code> instead — the installer
+      above defers to it automatically if it detects Arch.
+    </p>
+    <p class="note">
+      There's no screenshot here yet; the project is younger than the macOS
+      one. <a href="https://github.com/vivosAi/nimbus-wayland">Source and
+      details on GitHub</a>.
     </p>
   </section>
 
