@@ -394,8 +394,11 @@
     </p>
     <div class="codeblock"><code>curl -fsSL https://raw.githubusercontent.com/vivosAi/nimbus-wayland/main/packaging/install.sh | bash</code></div>
     <p class="note">
-      On Arch, <code>yay -S nimbus-wayland-bin</code> instead — the installer
-      above defers to it automatically if it detects Arch.
+      No AUR package yet — Arch Linux disabled all AUR publishing in August
+      2026 while it deals with an ongoing supply-chain attack, so that isn't
+      possible for anyone right now. The installer above still works on Arch;
+      once AUR is back, <code>yay -S nimbus-wayland-bin</code> will be the
+      fast path and the installer will defer to it automatically.
     </p>
     <p class="note">
       There's no screenshot here yet; the project is younger than the macOS
