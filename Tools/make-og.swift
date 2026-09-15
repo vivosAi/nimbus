@@ -1,17 +1,40 @@
 // The social preview card. 1200x630 is what Open Graph consumers crop to;
 // handing them the square app icon instead gets it letterboxed or cut.
 //
-//   swift Tools/make-og.swift docs/og.png
-//   swift Tools/make-og.swift /tmp/og-wayland.png wayland
+//   swift Tools/make-og.swift docs/og.png both
+//   swift Tools/make-og.swift docs/og-wayland.png wayland
+//   swift Tools/make-og.swift /tmp/og-mac.png mac
 //
-// The Wayland variant is the same card for the other repository, which has no
-// page of its own to generate one from. Same icon on purpose: one product.
+// Three variants, one icon on purpose: it is one product. `both` is what the
+// page and this repository ship, since the page now offers both platforms.
+// `wayland` is the card for the other repository, which has no page of its own
+// to generate one from. `mac` is the original, kept because the text is the
+// hero copy and it is the right card if the page ever splits in two.
 
 import AppKit
 
 let out = CommandLine.arguments.count > 1 ? CommandLine.arguments[1] : "docs/og.png"
-let variant = CommandLine.arguments.count > 2 ? CommandLine.arguments[2] : "mac"
+let variant = CommandLine.arguments.count > 2 ? CommandLine.arguments[2] : "both"
 let W: CGFloat = 1200, H: CGFloat = 630
+
+// Only the two lines of text differ between variants. Everything below is the
+// same card, so a new one is a case here rather than a copy of the file.
+let (subtitle, footerText): (String, String) = {
+    switch variant {
+    case "wayland":
+        // Not "Hyprland hides which window has focus" — it draws an active
+        // border, and that audience knows it. The argument is habituation,
+        // which is the whole reason the ring moves.
+        return ("A static border fades from awareness.\nNimbus makes keyboard focus obvious.",
+                "Free and open source   ·   wlr-layer-shell   ·   Hyprland 0.50+")
+    case "mac":
+        return ("macOS hides which window has keyboard focus.\nNimbus makes it obvious.",
+                "Free and open source   ·   Apple Silicon and Intel   ·   macOS 13+")
+    default:
+        return ("You cannot see which window has keyboard focus.\nNimbus makes it obvious.",
+                "Free and open source   ·   macOS 13+   ·   Hyprland 0.50+")
+    }
+}()
 
 func srgb(_ hex: UInt32, _ a: CGFloat = 1) -> NSColor {
     NSColor(srgbRed: CGFloat((hex >> 16) & 0xFF)/255,
@@ -62,14 +85,7 @@ let subAttrs: [NSAttributedString.Key: Any] = [
     .foregroundColor: srgb(0xAEB4CC),
     .paragraphStyle: body,
 ]
-let sub = NSAttributedString(
-    // Not "Hyprland hides which window has focus" — it draws an active border,
-    // and this audience knows it. The argument is habituation: a static border
-    // stops registering, which is the whole reason the ring moves.
-    string: variant == "wayland"
-        ? "A static border fades from awareness.\nNimbus makes keyboard focus obvious."
-        : "macOS hides which window has keyboard focus.\nNimbus makes it obvious.",
-    attributes: subAttrs)
+let sub = NSAttributedString(string: subtitle, attributes: subAttrs)
 let subWidth: CGFloat = W - textLeft - 44
 let subHeight = ceil(sub.boundingRect(
     with: CGSize(width: subWidth, height: .greatestFiniteMagnitude),
@@ -82,9 +98,7 @@ srgb(0xFFFFFF, 0.11).setFill()
 NSBezierPath(rect: CGRect(x: textLeft + 4, y: 206, width: 500, height: 1)).fill()
 
 let footer = NSAttributedString(
-    string: variant == "wayland"
-        ? "Free and open source   ·   wlr-layer-shell   ·   Hyprland 0.50+"
-        : "Free and open source   ·   Apple Silicon and Intel   ·   macOS 13+",
+    string: footerText,
     attributes: [
         .font: NSFont.systemFont(ofSize: 23, weight: .medium),
         .foregroundColor: srgb(0x7C8298),
