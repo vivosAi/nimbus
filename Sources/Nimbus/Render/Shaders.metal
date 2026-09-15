@@ -187,18 +187,21 @@ fragment float4 ring_fragment(VertexOut in [[stage_in]],
         discard_fragment();
     }
 
-    // Position around the perimeter. Dividing by the half-extents before atan2
-    // maps the rectangle onto a circle, so the motion travels at an even rate on
-    // a wide window instead of bunching up at the short edges. One extra divide
-    // versus a plain atan2, and it is the difference between a 1920x200 terminal
-    // looking right and looking lopsided.
-    const float theta = atan2(p.y / max(halfSize.y, 1.0),
-                              p.x / max(halfSize.x, 1.0));
+    // Position around the perimeter. Dividing by the half-extents before
+    // finding the direction maps the rectangle onto a circle, so the motion
+    // travels at an even rate on a wide window instead of bunching up at the
+    // short edges. One extra divide, and it is the difference between a
+    // 1920x200 terminal looking right and looking lopsided.
+    const float2 scaled = float2(p.x / max(halfSize.x, 1.0), p.y / max(halfSize.y, 1.0));
 
     // Sampling on a unit circle rather than on a 0…1 coordinate means the noise
     // has no seam where the perimeter wraps. Every term below is either a
     // function of this point or constant in theta, so seamlessness survives.
-    const float2 ring = float2(cos(theta), sin(theta));
+    // atan2 followed immediately by cos/sin of its own result does nothing but
+    // recover the input's unit direction — three transcendental calls to get
+    // back what normalize() gets in one, which matters on an iGPU. `d` was
+    // already checked above to rule out `scaled` landing exactly on zero.
+    const float2 ring = scaled / max(length(scaled), 1e-6);
 
     // Domain warping: noise used to displace the lookup of more noise. This is
     // what separates fire from a moving highlight — it produces curling,
