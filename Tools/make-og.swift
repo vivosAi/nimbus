@@ -31,10 +31,12 @@ let (subtitle, footerText): (String, String) = {
         return ("macOS hides which window has keyboard focus.\nNimbus makes it obvious.",
                 "Free and open source   ·   Apple Silicon and Intel   ·   macOS 13+")
     default:
-        // Names the loss before the fix. "Wrong session" rather than "wrong
-        // window" because that is the version of this people meet daily now,
-        // with several agents and terminals open at once.
-        return ("Sent the prompt to the wrong session?\nNimbus glows around whatever has focus.",
+        // The loss first, then what it is and why it is shaped that way. Two
+        // lines, not three: a third line was tried and looked wrong. No
+        // article before "Visual focus halo" on purpose, so the line reads as
+        // a label rather than a limp half-sentence, and because the article
+        // pushes it past the width the slot can hold.
+        return ("Stop sending messages to the wrong window.\nVisual focus halo, designed against habituation.",
                 "Free and open source   ·   macOS 13+   ·   Hyprland 0.50+")
     }
 }()
