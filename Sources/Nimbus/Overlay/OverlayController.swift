@@ -29,6 +29,14 @@ final class OverlayController {
     /// the window's new resting position without waiting for a focus event.
     private var isSuppressedByMotion = false
 
+    /// While Mission Control (or App Exposé) is on screen the ring stands down
+    /// the same way it does for a drag — see `checkMissionControl()` below for
+    /// how this is detected. There is no focus-change notification for it, so
+    /// this needs its own poll, done only while a ring is actually showing.
+    private var isSuppressedByMissionControl = false
+    private var missionControlTimer: Timer?
+    private let missionControlCheckInterval: TimeInterval = 0.15
+
     /// The last window a flare was fired for, so repeats are suppressed.
     private var lastFlaredState: FocusState?
 
@@ -103,6 +111,88 @@ final class OverlayController {
         } else {
             update(with: lastState)
         }
+    }
+
+    // MARK: - Mission Control
+
+    /// Started the moment a ring is shown, stopped the moment there is nothing
+    /// left to protect. Costs one `CGWindowListCopyWindowInfo` walk roughly
+    /// seven times a second, and only while a ring is actually on screen.
+    private func startMissionControlWatch() {
+        guard missionControlTimer == nil else { return }
+        let timer = Timer(timeInterval: missionControlCheckInterval, repeats: true) { [weak self] _ in
+            self?.checkMissionControl()
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        missionControlTimer = timer
+    }
+
+    private func stopMissionControlWatch() {
+        missionControlTimer?.invalidate()
+        missionControlTimer = nil
+    }
+
+    /// Self-stopping: if the ring is neither visible nor suppressed there is
+    /// nothing left to watch for, so the timer retires itself within one tick
+    /// instead of relying on every call site that can hide the ring to
+    /// remember to stop it.
+    private func checkMissionControl() {
+        guard isVisible || isSuppressedByMissionControl else {
+            stopMissionControlWatch()
+            return
+        }
+        setMissionControlActive(OverlayController.isMissionControlActive())
+    }
+
+    private func setMissionControlActive(_ active: Bool) {
+        guard active != isSuppressedByMissionControl else { return }
+        isSuppressedByMissionControl = active
+
+        if active {
+            let state = lastState
+            hide()
+            lastState = state          // hide() clears it; we want it back after
+        } else {
+            update(with: lastState)
+        }
+    }
+
+    /// True while Mission Control, Spaces' overview, or single-app Exposé is
+    /// on screen.
+    ///
+    /// There is no public API for this — Apple has never documented one. What
+    /// is verifiable (checked by diffing `CGWindowListCopyWindowInfo` before,
+    /// during and after invoking Mission Control, on macOS 15.7.9, 2026-09-15):
+    /// it paints one full-screen window per display, owned by the "Dock"
+    /// process, at window layers 18 and 20, with no window name. The ordinary
+    /// Dock icon strip and the desktop picture are also owned by "Dock" but
+    /// never at those layers or at a full screen's exact size, so this does
+    /// not fire during everyday Dock use — the false positive that ruled out
+    /// the simpler "com.apple.dock is frontmost" check. Same call the debug
+    /// window-stack dump already makes, so no new permission is involved.
+    ///
+    /// If a future macOS changes these layers this degrades to today's
+    /// behavior (a ring left at its old position) rather than breaking
+    /// anything, since `checkMissionControl()` would simply stop firing.
+    private static func isMissionControlActive() -> Bool {
+        guard let list = CGWindowListCopyWindowInfo([.optionOnScreenOnly], kCGNullWindowID)
+            as? [[String: Any]] else { return false }
+
+        let screenSizes = NSScreen.screens.map { $0.frame.size }
+        for entry in list {
+            guard entry[kCGWindowOwnerName as String] as? String == "Dock",
+                  let layer = entry[kCGWindowLayer as String] as? Int,
+                  layer == 18 || layer == 20,
+                  let boundsDict = entry[kCGWindowBounds as String] as? [String: Any],
+                  let rect = CGRect(dictionaryRepresentation: boundsDict as CFDictionary)
+            else { continue }
+
+            let matchesAScreen = screenSizes.contains {
+                abs($0.width - rect.width) < 1 && abs($0.height - rect.height) < 1
+            }
+            if matchesAScreen { return true }
+        }
+        return false
     }
 
     /// The flare fires on a change to a *different* window, not on every
@@ -201,8 +291,9 @@ final class OverlayController {
         }
 
         // Remember where the window is even while suppressed, so the ring can
-        // reappear in the right place the moment the drag ends.
-        guard !isSuppressedByMotion else {
+        // reappear in the right place the moment the drag ends, or Mission
+        // Control closes.
+        guard !isSuppressedByMotion, !isSuppressedByMissionControl else {
             lastState = state
             return
         }
@@ -252,6 +343,7 @@ final class OverlayController {
             // the window appears.
             if !displaysAreAsleep { metalView?.draw() }
             isVisible = true
+            startMissionControlWatch()
             Log.write("overlay shown for \(state.bundleID ?? "pid \(state.pid)")")
             if prefs.debugMode > 0 { logWindowDiagnostics() }
         }

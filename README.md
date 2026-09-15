@@ -199,10 +199,18 @@ If the ring looks blurry, is the wrong size, or disappears after moving a window
 between screens, please open an issue. `/tmp/nimbus.log` records a line reading
 `backing scale -> 2.0` when a 2x display is detected; including it helps.
 
-**Mission Control** shows a stale ring. The overlay is a separate window and is
-not scaled into the Mission Control grid with everything else, so it stays where
-the window used to be until you come back. Cosmetic, and only while you are
-deliberately looking at all your windows at once.
+**Mission Control hides the ring**, rather than leaving it stranded at the
+window's old position. The overlay is a separate window, so it cannot be
+scaled into the Mission Control grid the way real windows are. There is no
+public API to detect Mission Control, so this polls `CGWindowListCopyWindowInfo`
+for the full-screen windows Mission Control paints per display — the same call
+already used for the debug window-stack dump — and only while a ring is
+actually on screen.
+
+If you know a good way to make the ring travel with the window's own shrunk
+thumbnail instead of just disappearing, please [open an issue](../../issues).
+That would be the nicer version of this, and I have not found a public API for
+it.
 
 ## Performance
 
